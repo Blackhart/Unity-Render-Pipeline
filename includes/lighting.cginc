@@ -6,7 +6,7 @@
 
 inline half3	Lambertian_Diffuse(half3 Cdiff);
 
-inline half3	Lambertian_Specular(half3 Cspec, float3 N, float3 L, float3 V, float smoothness);
+inline half3	Blinn_Phong_Specular(half3 Cspec, float3 N, float3 L, float3 V, float smoothness);
 
 inline half3	dhrByRefractiveIndex(half3 n);
 inline half3	Fresnel_Schlick(half3 Rspec, float3 N, float3 L);
@@ -30,7 +30,7 @@ inline half3	Lambertian_Diffuse(half3 Rdiff)
 
 // ~~~~~ BRDF Specular Terms ~~~~~
 
-/*! \brief Lambertian term. Part of the specular BRDF term.
+/*! \brief Blinn-Phong term. Part of the specular BRDF term.
  *
  * \param Rspec The specular reflectance value.
  * \param N The normal vector [Normalized][World space].
@@ -38,7 +38,7 @@ inline half3	Lambertian_Diffuse(half3 Rdiff)
  * \param V The view vector [Normalized][World space].
  * \param smoothness The smoothness value. High value == shark reflection due to optically perfect surface. Low value == diffuse reflection due to surface discontinuities.
  */
-inline half3	Lambertian_Specular(half3 Rspec, float3 N, float3 L, float3 V, float smoothness)
+inline half3	Blinn_Phong_Specular(half3 Rspec, float3 N, float3 L, float3 V, float smoothness)
 {
 	half3 H = normalize(L + V);
 	return ((smoothness + 8.0) / (8.0 * PI)) * pow(saturate(dot(H, N)), smoothness) * Rspec;
@@ -46,7 +46,7 @@ inline half3	Lambertian_Specular(half3 Rspec, float3 N, float3 L, float3 V, floa
 
 // ~~~~~ Directional-hemispherical reflectance ~~~~~
 
-/*! \brief Compute the directional-hemispherical reflectance by the refractive index.
+/*! \brief Compute the directional-hemispherical reflectance using the substance's refractive index.
  *
  * \param n The substance's refractive index.
  */
@@ -69,7 +69,7 @@ inline half3	Fresnel_Schlick(half3 Rspec, float3 N, float3 L, int Power)
 
 // ~~~~~ Irradiance ~~~~~
 
-/*! \brief Irradiance at the surface.
+/*! \brief Irradiance at the object's surface.
  *
  * \param El The irradiance perpendicular to the light vector.
  * \param N The normal vector [Normalized][World space].
@@ -94,7 +94,7 @@ inline half3	Fdist_InvSqrt(float3 LightPos, float3 SurfPos, half3 Il)
 	return Il * (1.0 / (r * r));
 }
 
-/*! \brief ...
+/*! \brief Unrealisitic distance fallof function. Used in video games. 
  *
  * \param LightPos The light position [World space].
  * \param SurfPos The surface position [World space].
