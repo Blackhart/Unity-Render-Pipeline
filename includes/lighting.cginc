@@ -34,13 +34,12 @@ inline half3	Lambertian_Diffuse(half3 Rdiff)
  *
  * \param Rspec The specular reflectance value.
  * \param N The normal vector [Normalized][World space].
- * \param L The light vector [Normalized][World space].
+ * \param H The half vector [Normalized][World space].
  * \param V The view vector [Normalized][World space].
  * \param smoothness The smoothness value. High value == shark reflection due to optically perfect surface. Low value == diffuse reflection due to surface discontinuities.
  */
-inline half3	Blinn_Phong_Specular(half3 Rspec, float3 N, float3 L, float3 V, float smoothness)
+inline half3	Blinn_Phong_Specular(half3 Rspec, float3 N, float3 H, float3 V, float smoothness)
 {
-	half3 H = normalize(L + V);
 	return ((smoothness + 8.0) / (8.0 * PI)) * pow(saturate(dot(H, N)), smoothness) * Rspec;
 }
 
@@ -58,13 +57,13 @@ inline half3	dhrByRefractiveIndex(half3 n)
 /*! \brief Schlick's fresnel term. Part of the surface reflectance term.
  * 
  * \param Rspec The specular reflectance value.
- * \param N The normal vector [Normalized][World space].
- * \param L The light vector [Normalized][World space].
+ * \param Dir1 The Dir1 vector [Normalized][World space]. Depends of which fresnel effect do you want to have. Usually the half vector or normal vector.
+ * \param Dir2 The Dir2 vector [Normalized][World space]. Depends of the kind of reflection. If External reflection => The light vector. If Internal reflection => The transmited vector.
  * \param Power The power with which the Schlick's fresnel term is compute. Normal power is 5. A lower power will reduce accuracy but computation will be much faster.
  */
-inline half3	Fresnel_Schlick(half3 Rspec, float3 N, float3 L, int Power)
+inline half3	Fresnel_Schlick(half3 Rspec, float3 Dir1, float3 Dir2, int Power)
 {
-	return Rspec + (1.0 - Rspec) * pow((1.0 - saturate(dot(N, L))), Power);
+	return Rspec + (1.0 - Rspec) * pow((1.0 - saturate(dot(Dir1, Dir2))), Power);
 }
 
 // ~~~~~ Irradiance ~~~~~
