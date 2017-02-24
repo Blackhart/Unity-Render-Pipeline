@@ -6,6 +6,7 @@
 
 inline half3	Lambertian_Diffuse(half3 Cdiff);
 
+inline half3	Phong_Specular(half3 Rspec, float3 R, float3 V, float shininess);
 inline half3	Blinn_Phong_Specular(half3 Cspec, float3 N, float3 L, float3 V, float smoothness);
 
 inline half3	dhrByRefractiveIndex(half3 n);
@@ -29,6 +30,18 @@ inline half3	Lambertian_Diffuse(half3 Rdiff)
 }
 
 // ~~~~~ BRDF Specular Terms ~~~~~
+
+/*! \brief Phong term. Part of the specular BRDF term.
+ *
+ * \param Rspec The specular reflectance value.
+ * \param R The ideal reflection vector [Normalized][World space].
+ * \param V The view vector [Normalized][World space].
+ * \param shininess Controls the size and power of the specular highlight.
+ */
+inline half3	Phong_Specular(half3 Rspec, float3 R, float3 V, float shininess)
+{
+	return Rspec * pow(dot(R, V), shininess);
+}
 
 /*! \brief Blinn-Phong term. Part of the specular BRDF term.
  *
