@@ -4,12 +4,13 @@
 #include "parameters.cginc"
 
 
-inline half3	Lambertian_Diffuse(half3 Cdiff);
+inline half3	Diffuse_Lambertian(half3 Cdiff);
 
-inline half3	Phong_Specular(half3 Rspec, float3 R, float3 V, float shininess);
-inline half3	Blinn_Phong_Specular(half3 Cspec, float3 N, float3 L, float3 V, float smoothness);
+inline half3	Specular_Phong(half3 Rspec, float3 R, float3 V, float shininess);
+inline half3	Specular_Blinn_Phong(half3 Cspec, float3 N, float3 L, float3 V, float smoothness);
 
-inline half3	dhrByRefractiveIndex(half3 n);
+inline half3	dhr_dhrByRefractiveIndex(half3 n);
+
 inline half3	Fresnel_Schlick(half3 Rspec, float3 N, float3 L);
 
 inline half3	Irradiance(half3 El, float3 N, float3 L);
@@ -24,7 +25,7 @@ inline half3	Fdist_Clamped(float3 LightPos, float3 SurfPos, half3 Il, float Rsta
  *
  * \param Rdiff The diffuse reflectance value.
  */
-inline half3	Lambertian_Diffuse(half3 Rdiff)
+inline half3	Diffuse_Lambertian(half3 Rdiff)
 {
 	return Rdiff / PI;
 }
@@ -38,7 +39,7 @@ inline half3	Lambertian_Diffuse(half3 Rdiff)
  * \param V The view vector [Normalized][World space].
  * \param shininess Controls both the size and power of the specular highlight.
  */
-inline half3	Phong_Specular(half3 Rspec, float3 R, float3 V, float shininess)
+inline half3	Specular_Phong(half3 Rspec, float3 R, float3 V, float shininess)
 {
 	return ((shininess + 2.0) / (2.0 * PI)) * pow(dot(R, V), shininess) * Rspec;
 }
@@ -50,7 +51,7 @@ inline half3	Phong_Specular(half3 Rspec, float3 R, float3 V, float shininess)
  * \param H The half vector [Normalized][World space].
  * \param shininess Controls both the size and power of the specular highlight.
  */
-inline half3	Blinn_Phong_Specular(half3 Rspec, float3 N, float3 H, float shininess)
+inline half3	Specular_Blinn_Phong(half3 Rspec, float3 N, float3 H, float shininess)
 {
 	return ((shininess + 8.0) / (8.0 * PI)) * pow(saturate(dot(H, N)), shininess) * Rspec;
 }
@@ -61,10 +62,12 @@ inline half3	Blinn_Phong_Specular(half3 Rspec, float3 N, float3 H, float shinine
  *
  * \param n The substance's refractive index.
  */
-inline half3	dhrByRefractiveIndex(half3 n)
+inline half3	dhr_dhrByRefractiveIndex(half3 n)
 {
 	return ((n - 1.0) / (n + 1.0)) * ((n - 1.0) / (n + 1.0));
 }
+
+// ~~~~~ Fresnel ~~~~~
 
 /*! \brief Schlick's fresnel term. Part of the surface reflectance term.
  * 
