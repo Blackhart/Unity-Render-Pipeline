@@ -4,14 +4,14 @@
 #include "parameters.cginc"
 
 
-inline half3	Diffuse_Lambertian(half3 Cdiff);
+inline half3	Diffuse_Lambertian(half3 Rdiff);
 
 inline half3	Specular_Phong(half3 Rspec, float3 R, float3 V, float shininess);
-inline half3	Specular_Blinn_Phong(half3 Cspec, float3 N, float3 L, float3 V, float smoothness);
+inline half3	Specular_Blinn_Phong(half3 Rspec, float3 N, float3 H, float shininess);
 
 inline half3	dhr_dhrByRefractiveIndex(half3 n);
 
-inline half3	Fresnel_Schlick(half3 Rspec, float3 N, float3 L);
+inline half3	Fresnel_Schlick(half3 Rspec, float3 Dir1, float3 Dir2, int Power);
 
 inline half3	Irradiance(half3 El, float3 N, float3 L);
 
