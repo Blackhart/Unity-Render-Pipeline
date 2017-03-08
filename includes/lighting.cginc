@@ -31,29 +31,28 @@ inline half3	Lambertian_Diffuse(half3 Rdiff)
 
 // ~~~~~ BRDF Specular Terms ~~~~~
 
-/*! \brief Phong term. Part of the specular BRDF term.
+/*! \brief Phong term. Part of the specular BRDF term. [Normalized]
  *
  * \param Rspec The specular reflectance value.
  * \param R The ideal reflection vector [Normalized][World space].
  * \param V The view vector [Normalized][World space].
- * \param shininess Controls the size and power of the specular highlight.
+ * \param shininess Controls both the size and power of the specular highlight.
  */
 inline half3	Phong_Specular(half3 Rspec, float3 R, float3 V, float shininess)
 {
-	return Rspec * pow(dot(R, V), shininess);
+	return ((shininess + 2.0) / (2.0 * PI)) * pow(dot(R, V), shininess) * Rspec;
 }
 
-/*! \brief Blinn-Phong term. Part of the specular BRDF term.
+/*! \brief Blinn-Phong term. Part of the specular BRDF term. [Normalized]
  *
  * \param Rspec The specular reflectance value.
  * \param N The normal vector [Normalized][World space].
  * \param H The half vector [Normalized][World space].
- * \param V The view vector [Normalized][World space].
- * \param smoothness The smoothness value. High value == shark reflection due to optically perfect surface. Low value == diffuse reflection due to surface discontinuities.
+ * \param shininess Controls both the size and power of the specular highlight.
  */
-inline half3	Blinn_Phong_Specular(half3 Rspec, float3 N, float3 H, float3 V, float smoothness)
+inline half3	Blinn_Phong_Specular(half3 Rspec, float3 N, float3 H, float shininess)
 {
-	return ((smoothness + 8.0) / (8.0 * PI)) * pow(saturate(dot(H, N)), smoothness) * Rspec;
+	return ((shininess + 8.0) / (8.0 * PI)) * pow(saturate(dot(H, N)), shininess) * Rspec;
 }
 
 // ~~~~~ Directional-hemispherical reflectance ~~~~~
