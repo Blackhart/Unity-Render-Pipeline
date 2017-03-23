@@ -17,7 +17,7 @@ inline float	GF_Base(float3 N, float3 L, float3 V);
 inline float	GF_Neumann(float3 N, float3 L, float3 V);
 inline float	GF_Cook_Torrance(float3 N, float3 L, float3 V, float3 H);
 inline float	GF_Kelemen(float3 N, float3 L, float3 V, float3 H);
-inline float	GF_Schlick_GGX(float3 N, float3 V, float3 L, float roughness);
+inline float	GF_Schlick_GGX(float3 N, float3 L, float3 V, float roughness);
 
 inline half3	Fresnel_Schlick(half3 Rspec, float3 Dir1, float3 Dir2, int Power);
 
@@ -196,7 +196,7 @@ inline float	GF_Kelemen(float3 N, float3 L, float3 V, float3 H)
  * \param L The light vector [Normalized][World space].
  * \param roughness The surface's roughness. Controls both the size and power of the specular highlight.
  */
-inline float	GF_Schlick_GGX(float3 N, float3 V, float3 L, float roughness)
+inline float	GF_Schlick_GGX(float3 N, float3 L, float3 V, float roughness)
 {
 	float NdotV = saturate(dot(N, V));
 	float NdotL = saturate(dot(N, L));
