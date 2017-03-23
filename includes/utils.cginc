@@ -16,9 +16,7 @@ inline float3x3	TBNMatrix(float3 N, float3 T);
 inline float3x3	TBNMatrix(float3 N, float4 T)
 {
 	float3 B = cross(N, T.xyz) * T.w;
-	return float3x3(T.x, B.x, N.x,
-					T.y, B.y, N.y,
-					T.z, B.z, N.z);
+	return float3x3(T.x, B.x, N.x, T.y, B.y, N.y, T.z, B.z, N.z);
 }
 
 #endif
