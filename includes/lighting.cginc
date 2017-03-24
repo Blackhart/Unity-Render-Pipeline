@@ -77,7 +77,9 @@ inline half3	Specular_Blinn_Phong(half3 Rspec, float3 N, float3 H, float shinine
  */
 inline half3	Specular_Cook_Torrance(float NDF, float GF, half3 F, float3 V, float3 L, float3 N)
 {
-	return (NDF * GF * F) / (PI * dot(V, N) * dot(L, N));
+	float NdotV = saturate(dot(N, V));
+	float NdotL = saturate(dot(N, L));
+	return (NDF * GF * F) / (PI * NdotV * NdotL);
 }
 
 // ~~~~~ Normal Distribution Function ~~~~~

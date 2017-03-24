@@ -7,11 +7,10 @@ inline float3x3	TBNMatrix(float3 N, float3 T);
 
 // ~~~~~ Matrix ~~~~~
 
-/*! \brief The TBN matrix
+/*! \brief The TBN matrix [Object space]
  *
  * \param N The normal vector [Normalized][Object space]
  * \param T The tangent space [Normalized][Object space]
- *
  */
 inline float3x3	TBNMatrix(float3 N, float4 T)
 {

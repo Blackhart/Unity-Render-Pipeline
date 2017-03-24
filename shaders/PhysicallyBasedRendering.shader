@@ -181,6 +181,7 @@
 			float4		_SpecMapTMP_ST;
 			half4		_SpecColorTMP;
 			sampler2D	_NormalMap;
+			float4		_NormalMap_ST;
 
 
 			struct vertOutput
