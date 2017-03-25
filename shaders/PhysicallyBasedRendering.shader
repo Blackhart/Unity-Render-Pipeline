@@ -56,10 +56,10 @@
 			#if !defined(_NORMALMAP)
 				float3	Normal : NORMAL;
 			#endif
-				float3	WorldLightDir : COLOR0;
-				float3	WorldViewDir : TEXCOORD1;
+				float3	WorldLightDir : TEXCOORD1;
+				float3	WorldViewDir : TEXCOORD2;
 			#if defined(_NORMALMAP)
-				float3x3	TBNMatrix : TEXCOORD2;
+				float3x3	TBNMatrix : COLOR0;
 			#endif
 			};
 
@@ -101,7 +101,7 @@
 				float3 WorldNormal = normalize(pIN.Normal);
 			#else
 				fixed3 Normal = UnpackNormal(tex2D(_NormalMap, pIN.Texcoord));
-				float3 WorldNormal = mul(unity_ObjectToWorld, mul(pIN.TBNMatrix, Normal));
+				float3 WorldNormal = mul(pIN.TBNMatrix, Normal);
 			#endif
 				float3 WorldLightDir = normalize(pIN.WorldLightDir);
 				float3 WorldViewDir = normalize(pIN.WorldViewDir);
@@ -200,7 +200,7 @@
 				float4	LightCoord : TEXCOORD4;
 			#endif
 			#if defined(_NORMALMAP)
-				float3x3	TBNMatrix : TEXCOORD5;
+				float3x3	TBNMatrix : COLOR0;
 			#endif
 			};
 
@@ -246,7 +246,7 @@
 				float3 WorldNormal = normalize(pIN.Normal);
 			#else
 				fixed3 Normal = UnpackNormal(tex2D(_NormalMap, pIN.Texcoord));
-				float3 WorldNormal = mul(unity_ObjectToWorld, mul(pIN.TBNMatrix, Normal));
+				float3 WorldNormal = mul(pIN.TBNMatrix, Normal);
 			#endif
 				float3 WorldLightDir = normalize(pIN.WorldLightDir);
 				float3 WorldViewDir = normalize(pIN.WorldViewDir);
