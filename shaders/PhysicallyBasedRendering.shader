@@ -36,6 +36,7 @@
 
 			#include "UnityCG.cginc"
 			#include "Lighting.cginc"
+			#include "AutoLight.cginc"
 			#include "../includes/lighting.cginc"
 			#include "../includes/utils.cginc"
 
@@ -64,6 +65,7 @@
 			#if defined(_NORMALMAP)
 				float3x3	TBNMatrix : COLOR0;
 			#endif
+				SHADOW_COORDS(3)
 			};
 
 			void	vert(in appdata_tan pIN, out vertOutput pOUT)
@@ -79,6 +81,20 @@
 				pOUT.WorldViewDir = _WorldSpaceCameraPos - WorldPos;
 			#if defined(_NORMALMAP)
 				pOUT.TBNMatrix = TBNMatrix(pIN.normal, pIN.tangent);
+			#endif
+
+			#if defined (SHADOWS_SCREEN)
+				#if defined(UNITY_NO_SCREENSPACE_SHADOWS)
+					pOUT._ShadowCoord = mul(unity_WorldToShadow[0], WorldPos);
+				#else
+					pOUT._ShadowCoord = ComputeScreenPos(UnityObjectToClipPos(pIN.vertex));
+				#endif
+			#endif
+			#if defined (SHADOWS_DEPTH) && defined (SPOT)
+				pOUT._ShadowCoord = mul(unity_WorldToShadow[0], WorldPos);
+			#endif
+			#if defined (SHADOWS_CUBE)
+				pOUT._ShadowCoord = WorldPos - _LightPositionRange.xyz;
 			#endif
 
 				// ~~~~~ OUTPUT ~~~~~
@@ -124,6 +140,10 @@
 				float VdotH = dot(WorldViewDir, H);
 				float LdotH = dot(WorldLightDir, H);
 
+				// ~~~~~ SHADOW ~~~~~
+
+				fixed Shadow = SHADOW_ATTENUATION(pIN);
+
 				// ~~~~~ Microfacet ~~~~~
 
 			#if defined(NDF_TROWBRIDGE_REITZ)
@@ -153,7 +173,7 @@
 
 				half3 Ldiff = Diffuse_Lambertian(Rdiff);
 				half3 Lspec = Specular_Cook_Torrance(NDF, GF, Rspec, NdotV, NdotL);
-				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, NdotL) * Occlusion;
+				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, NdotL) * Occlusion * Shadow;
 
 				// ~~~~~ OUTPUT ~~~~~
 
@@ -221,6 +241,7 @@
 			#if defined(_NORMALMAP)
 				float3x3	TBNMatrix : COLOR0;
 			#endif
+				SHADOW_COORDS(5)
 			};
 
 			void	vert(in appdata_tan pIN, out vertOutput pOUT)
@@ -240,6 +261,20 @@
 			#endif
 			#if defined(_NORMALMAP)
 				pOUT.TBNMatrix = TBNMatrix(pIN.normal, pIN.tangent);
+			#endif
+
+			#if defined (SHADOWS_SCREEN)
+				#if defined(UNITY_NO_SCREENSPACE_SHADOWS)
+					pOUT._ShadowCoord = mul(unity_WorldToShadow[0], WorldPos);
+				#else
+					pOUT._ShadowCoord = ComputeScreenPos(UnityObjectToClipPos(pIN.vertex));
+				#endif
+			#endif
+			#if defined (SHADOWS_DEPTH) && defined (SPOT)
+				pOUT._ShadowCoord = mul(unity_WorldToShadow[0], WorldPos);
+			#endif
+			#if defined (SHADOWS_CUBE)
+				pOUT._ShadowCoord = WorldPos - _LightPositionRange.xyz;
 			#endif
 
 				// ~~~~~ OUTPUT ~~~~~
@@ -285,6 +320,10 @@
 				float VdotH = dot(WorldViewDir, H);
 				float LdotH = dot(WorldLightDir, H);
 
+				// ~~~~~ SHADOW ~~~~~
+
+				fixed Shadow = SHADOW_ATTENUATION(pIN);
+
 				// ~~~~~ Light Attenuation ~~~~~
 
 			#if defined(POINT)
@@ -327,6 +366,42 @@
 				// ~~~~~ OUTPUT ~~~~~
 
 				pOUT.Color = half4(L0, 1.0);
+			}
+
+			ENDCG
+		}
+
+		Pass
+		{
+			Tags
+			{
+				"LightMode" = "ShadowCaster"
+			}
+
+			CGPROGRAM
+
+			#pragma multi_compile_shadowcaster
+
+			#pragma vertex vert
+			#pragma fragment frag
+
+			#include "UnityCG.cginc"
+
+			struct v2f
+			{
+				V2F_SHADOW_CASTER;
+			};
+
+			v2f	vert(appdata_base v)
+			{
+				v2f o;
+				TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
+				return o;
+			}
+
+			float4	frag(v2f i) : SV_Target
+			{
+				SHADOW_CASTER_FRAGMENT(i)
 			}
 
 			ENDCG

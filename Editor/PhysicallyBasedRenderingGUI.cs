@@ -194,7 +194,7 @@ namespace UnityEditor
 			EditorGUILayout.Space();
 			SurfaceBRDF = (eSurfaceBRDF)EditorGUILayout.EnumPopup("Surface BRDF", SurfaceBRDF);
 			NDF = (eNDF)EditorGUILayout.EnumPopup("Normal Distribution", NDF);
-			GF = (eGF)EditorGUILayout.EnumPopup("Geometry", GF);
+			GF = (eGF)EditorGUILayout.EnumPopup("Geometry Factor", GF);
 			Fresnel = (eFresnel)EditorGUILayout.EnumPopup("Fresnel", Fresnel);
 
 			EditorGUILayout.Space ();
