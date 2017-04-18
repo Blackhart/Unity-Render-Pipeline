@@ -1,6 +1,7 @@
 #ifndef __PARAMETERS_CGINC__
 #define __PARAMETERS_CGINC__
 
-#define PI 3.14159265359
+#define PI	3.14159265359
+#define ONE_OVER_PI	0.3183098861
 
 #endif

@@ -8,20 +8,20 @@ inline half3	Diffuse_Lambertian(half3 Rdiff);
 
 inline half3	Specular_Phong(half3 Rspec, float3 R, float3 V, float shininess);
 inline half3	Specular_Blinn_Phong(half3 Rspec, float3 N, float3 H, float shininess);
-inline half3	Specular_Cook_Torrance(float NDF, float GF, half3 F, float3 V, float3 L, float3 N);
+inline half3	Specular_Cook_Torrance(float NDF, float GF, half3 F, float NdotV, float NdotL);
 
-inline float	NDF_Trowbridge_Reitz_GGX(float3 N, float3 H, float roughness);
-inline float	NDF_Beckmann(float3 N, float3 H, float roughness);
+inline float	NDF_Trowbridge_Reitz_GGX(float NdotH, float roughness);
+inline float	NDF_Beckmann(float NdotH, float roughness);
 
-inline float	GF_Base(float3 N, float3 L, float3 V);
-inline float	GF_Neumann(float3 N, float3 L, float3 V);
-inline float	GF_Cook_Torrance(float3 N, float3 L, float3 V, float3 H);
-inline float	GF_Kelemen(float3 N, float3 L, float3 V, float3 H);
-inline float	GF_Schlick_GGX(float3 N, float3 L, float3 V, float roughness);
+inline float	GF_Base(float NdotL, float NdotV);
+inline float	GF_Neumann(float NdotL, float NdotV);
+inline float	GF_Cook_Torrance(float NdotH, float NdotV, float NdotL, float VdotH);
+inline float	GF_Kelemen(float NdotL, float NdotV, float VdotH);
+inline float	GF_Schlick_GGX(float NdotV, float NdotL, float roughness);
 
 inline half3	Fresnel_Schlick(half3 Rspec, float3 Dir1, float3 Dir2, int Power);
 
-inline half3	Irradiance(half3 El, float3 N, float3 L);
+inline half3	Irradiance(half3 El, float NdotL);
 
 inline half3	Fdist_InvSqrt(float3 LightPos, float3 SurfPos, half3 Il);
 inline half3	Fdist_Clamped(float3 LightPos, float3 SurfPos, half3 Il, float Rstart, float Rend);
@@ -35,7 +35,7 @@ inline half3	Fdist_Clamped(float3 LightPos, float3 SurfPos, half3 Il, float Rsta
  */
 inline half3	Diffuse_Lambertian(half3 Rdiff)
 {
-	return Rdiff / PI;
+	return Rdiff * ONE_OVER_PI;
 }
 
 // ~~~~~ BRDF Specular Terms ~~~~~
@@ -71,15 +71,12 @@ inline half3	Specular_Blinn_Phong(half3 Rspec, float3 N, float3 H, float shinine
  * \param NDF The normal distribution function's factor.
  * \param GF The geometry function's factor.
  * \param F The fresnel factor.
- * \param V The view vector [Normalized][World space].
- * \param L The light vector [Normalized][World space].
- * \param N The normal vector [Normalized][World space].
+ * \param NdotV Dot product between the normal vector and the view vector.
+ * \param NdotL Dot product between the normal vector and the light vector.
  */
-inline half3	Specular_Cook_Torrance(float NDF, float GF, half3 F, float3 V, float3 L, float3 N)
+inline half3	Specular_Cook_Torrance(float NDF, float GF, half3 F, float NdotV, float NdotL)
 {
-	float NdotV = saturate(dot(N, V));
-	float NdotL = saturate(dot(N, L));
-	return (NDF * GF * F) / (PI * NdotV * NdotL);
+	return NDF * GF * F * ONE_OVER_PI * (1.0 / (NdotV * NdotL));
 }
 
 // ~~~~~ Normal Distribution Function ~~~~~
@@ -88,33 +85,32 @@ inline half3	Specular_Cook_Torrance(float NDF, float GF, half3 F, float3 V, floa
  *
  *	D(h) = pow(a, 2) / PI * pow((pow(n.h, 2) * (pow(a, 2) - 1) + 1), 2)
  *
- * \param N The normal vector [Normalized][World space].
- * \param H The half vector [Normalized][World space].
+ * \param NdotH Dot product between the normal vector and the half vector.
  * \param roughness The surface's roughness. Controls both the size and power of the specular highlight.
  */
-inline float	NDF_Trowbridge_Reitz_GGX(float3 N, float3 H, float roughness)
+inline float	NDF_Trowbridge_Reitz_GGX(float NdotH, float roughness)
 {
-	float sqrRoughness = roughness * roughness;
-	float NdotH = saturate(dot(N, H));
-	float sqrNdotH = NdotH * NdotH;
-	float normalizeFactor = (sqrNdotH * (sqrRoughness - 1.0) + 1.0);
-	return sqrRoughness / (PI * normalizeFactor * normalizeFactor);
+	float r = roughness * roughness;
+	float r2 = r * r;
+	float denom = NdotH * NdotH * (r2 - 1.0) + 1.0;
+	denom = 1.0 / (denom * denom);
+	return r2 * ONE_OVER_PI * denom;
 }
 
 /*! \brief Beckmann term. It's a normal distribution function used by microfacet based BRDF.
  *
- *	D(h) = (pow(a, 2) / (PI * pow(a, 2) * pow(n.h, 4))) * exp((pow(n.h, 2) - 1.0) / (pow(a, 2) * pow(n.h, 2)))
+ *	D(h) = 1.0 / (PI * m2 * NdotH4) * exp( NdotH2 - 1 / m2 * NdotH2 ) 
  *
- * \param N The normal vector [Normalized][World space].
- * \param H The half vector [Normalized][World space].
+ * \param NdotH Dot product between the normal vector and the half vector.
  * \param roughness The surface's roughness. Controls both the size and power of the specular highlight.
  */
-inline float	NDF_Beckmann(float3 N, float3 H, float roughness)
+inline float	NDF_Beckmann(float NdotH, float roughness)
 {
-	float sqrRoughness = roughness * roughness;
-	float NdotH = saturate(dot(N, H));
-	float sqrNdotH = NdotH * NdotH;
-	return (1.0 / (PI * sqrRoughness * sqrNdotH * sqrNdotH)) * exp((sqrNdotH - 1.0) / (sqrRoughness * sqrNdotH));
+	float r = roughness * roughness;
+	float r2 = r * r;
+	float NdotH4 = pow(NdotH, 4);
+	float NdotH2 = NdotH * NdotH;
+	return (1.0 * ONE_OVER_PI * (1.0 / (r2 * NdotH4))) * exp((NdotH2 - 1.0) * (1.0 / (r2 * NdotH2)));
 }
 
 // ~~~~~ Geometry Function ~~~~~
@@ -123,47 +119,40 @@ inline float	NDF_Beckmann(float3 N, float3 H, float roughness)
  *
  *	G(l,v,h) = (n.l)(n.v)
  *
- * \param N The normal vector [Normalized][World space].
- * \param V The view vector [Normalized][World space].
- * \param L The light vector [Normalized][World space].
+ * \param NdotL Dot product between the normal vector and the light vector.
+ * \param NdotV Dot product between the normal vector and the view vector.
  */
-inline float	GF_Base(float3 N, float3 L, float3 V)
+inline float	GF_Base(float NdotL, float NdotV)
 {
-	return saturate(dot(N, L)) * saturate(dot(N, V));
+	return NdotL * NdotV;
 }
 
 /*! \brief Neumann term. It is a geometry function used by microfacet based BRDF.
  *
  *	G(l,v,h) = (n.l)(n.v) / max(n.l, n.v)
  *
- * \param N The normal vector [Normalized][World space].
- * \param V The view vector [Normalized][World space].
- * \param L The light vector [Normalized][World space].
+ * \param NdotL Dot product between the normal vector and the light vector.
+ * \param NdotV Dot product between the normal vector and the view vector.
  */
-inline float	GF_Neumann(float3 N, float3 L, float3 V)
+inline float	GF_Neumann(float NdotL, float NdotV)
 {
-	float NdotL = saturate(dot(N, L));
-	float NdotV = saturate(dot(N, V));
-	return (NdotL * NdotV) / max(NdotL, NdotV);
+	return NdotL * NdotV * (1.0 / max(NdotL, NdotV));
 }
 
 /*! \brief Cook-Torrance term. It is a geometry function used by microfacet based BRDF.
  *
  *	G(l,v,h) = min(1, 2(n.h)(n.h) / v.h, 2(n.h)(n.l) / v.h)
  *
- * \param N The normal vector [Normalized][World space].
- * \param V The view vector [Normalized][World space].
- * \param L The light vector [Normalized][World space].
- * \param H The half vector [Normalized][World space].
+ * \param NdotH Dot product between the normal vector and the half vector.
+ * \param NdotV Dot product between the normal vector and the view vector.
+ * \param NdotL Dot product between the normal vector and the light vector.
+ * \param VdotH Dot product between the view vector and the half vector.
  */
-inline float	GF_Cook_Torrance(float3 N, float3 L, float3 V, float3 H)
+inline float	GF_Cook_Torrance(float NdotH, float NdotV, float NdotL, float VdotH)
 {
-	float NdotH = saturate(dot(N, H));
-	float NdotV = saturate(dot(N, V));
-	float NdotL = saturate(dot(N, L));
-	float VdotH = saturate(dot(V, H));
-	float CT1 = (2.0 * NdotH * NdotV) / VdotH;
-	float CT2 = (2.0 * NdotH * NdotL) / VdotH;
+	float NdotHp2 = 2.0 * NdotH;
+	float CT1 = NdotHp2 * NdotV * (1.0 / VdotH);
+	float CT2 = NdotHp2 * NdotL * (1.0 / VdotH);
 	return min(1.0, min(CT1, CT2));
 }
 
@@ -171,18 +160,14 @@ inline float	GF_Cook_Torrance(float3 N, float3 L, float3 V, float3 H)
  *
  *	G(l,v,h) = (n.l)(n.v) / pow(v.h, 2)
  *
- * \param N The normal vector [Normalized][World space].
- * \param V The view vector [Normalized][World space].
- * \param L The light vector [Normalized][World space].
- * \param H The half vector [Normalized][World space].
+ * \param NdotL Dot product between the normal vector and the light vector.
+ * \param NdotV Dot product between the normal vector and the view vector.
+ * \param VdotH Dot product between the view vector and the half vector.
  */
-inline float	GF_Kelemen(float3 N, float3 L, float3 V, float3 H)
+inline float	GF_Kelemen(float NdotL, float NdotV, float VdotH)
 {
-	float NdotL = saturate(dot(N, L));
-	float NdotV = saturate(dot(N, V));
-	float VdotH = saturate(dot(V, H));
 	float sqrVdotH = VdotH * VdotH;
-	return (NdotL * NdotV) / sqrVdotH;
+	return NdotL * NdotV * (1.0 / sqrVdotH);
 }
 
 /*! \brief Schlick GGX term. It is a geometry function used by microfacet based BRDF.
@@ -193,18 +178,15 @@ inline float	GF_Kelemen(float3 N, float3 L, float3 V, float3 H)
  *
  *	k = a * sqrt(2/PI)
  *
- * \param N The normal vector [Normalized][World space].
- * \param V The view vector [Normalized][World space].
- * \param L The light vector [Normalized][World space].
+ * \param NdotV Dot product between the normal vector and the view vector.
+ * \param NdotL Dot product between the normal vector and the light vector.
  * \param roughness The surface's roughness. Controls both the size and power of the specular highlight.
  */
-inline float	GF_Schlick_GGX(float3 N, float3 L, float3 V, float roughness)
+inline float	GF_Schlick_GGX(float NdotV, float NdotL, float roughness)
 {
-	float NdotV = saturate(dot(N, V));
-	float NdotL = saturate(dot(N, L));
-	float k = ((roughness + 1.0) * (roughness + 1.0)) / 8.0;
-	float Gv = NdotV / (NdotV * (1.0 - k) + k);
-	float Gl = NdotL / (NdotL * (1.0 - k) + k);
+	float k = (roughness + 1.0) * (roughness + 1.0) * 0.125;
+	float Gv = NdotV * (1.0 / (NdotV * (1.0 - k) + k));
+	float Gl = NdotL * (1.0 / (NdotL * (1.0 - k) + k));
 	return Gv * Gl;
 }
 
@@ -219,7 +201,7 @@ inline float	GF_Schlick_GGX(float3 N, float3 L, float3 V, float roughness)
  */
 inline half3	Fresnel_Schlick(half3 Rspec, float3 Dir1, float3 Dir2, int Power)
 {
-	return Rspec + (1.0 - Rspec) * pow((1.0 - saturate(dot(Dir1, Dir2))), Power);
+	return Rspec + (1.0 - Rspec) * pow((1.0 - dot(Dir1, Dir2)), Power);
 }
 
 // ~~~~~ Irradiance ~~~~~
@@ -227,12 +209,11 @@ inline half3	Fresnel_Schlick(half3 Rspec, float3 Dir1, float3 Dir2, int Power)
 /*! \brief Irradiance at the object's surface.
  *
  * \param El The irradiance perpendicular to the light vector.
- * \param N The normal vector [Normalized][World space].
- * \param L The light vector [Normalized][World space].
+ * \param NdotL Dot product between the normal vector and the light vector.
  */
-inline half3	Irradiance(half3 El, float3 N, float3 L)
+inline half3	Irradiance(half3 El, float NdotL)
 {
-	return El * saturate(dot(N, L));
+	return El * NdotL;
 }
 
 // ~~~~~ Distance Fallof Functions ~~~~~

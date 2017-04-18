@@ -27,7 +27,7 @@
 
 			#pragma multi_compile_fwdbase
 			#pragma shader_feature NDF_TROWBRIDGE_REITZ NDF_BECKMANN
-			#pragma shader_feature GF_SCHLICK_GGX GF_BASE GF_NEUMANN GF_COOK_TORRANCE GF_KELEMEN
+			#pragma shader_feature GF_NEUMANN GF_SCHLICK_GGX GF_BASE GF_COOK_TORRANCE GF_KELEMEN
 			#pragma shader_feature _NORMALMAP
 
 			#pragma vertex vert
@@ -96,7 +96,7 @@
 				half3 Il = _LightColor0.rgb;
 				half4 DiffColor = _DiffColor * tex2D(_DiffMap, pIN.Texcoord);
 				half4 SpecColor = _SpecColorTMP * tex2D(_SpecMapTMP, pIN.Texcoord);
-				half Roughness = max(SpecColor.a * SpecColor.a, 0.01);
+				half Roughness = max(SpecColor.a, 0.0);
 			#if !defined(_NORMALMAP)
 				float3 WorldNormal = normalize(pIN.Normal);
 			#else
@@ -104,27 +104,40 @@
 				float3 WorldNormal = mul(pIN.TBNMatrix, Normal);
 			#endif
 				float3 WorldLightDir = normalize(pIN.WorldLightDir);
+
+				float NdotL = dot(WorldNormal, WorldLightDir);
+				if (NdotL <= 0.0)
+				{
+					pOUT.Color = half4(0.0, 0.0, 0.0, 1.0);
+					return;
+				}
+
 				float3 WorldViewDir = normalize(pIN.WorldViewDir);
 				float3 H = normalize(WorldLightDir + WorldViewDir);
+
+				float NdotV = dot(WorldNormal, WorldViewDir);
+				float NdotH = dot(WorldNormal, H);
+				float VdotH = dot(WorldViewDir, H);
+				float LdotH = dot(WorldLightDir, H);
 
 				// ~~~~~ Microfacet ~~~~~
 
 			#if defined(NDF_TROWBRIDGE_REITZ)
-				float NDF = NDF_Trowbridge_Reitz_GGX(WorldNormal, H, Roughness);
+				float NDF = NDF_Trowbridge_Reitz_GGX(NdotH, Roughness);
 			#elif defined(NDF_BECKMANN)
-				float NDF = NDF_Beckmann(WorldNormal, H, Roughness);
+				float NDF = NDF_Beckmann(NdotH, Roughness);
 			#endif
 
 			#if defined(GF_BASE)
-				float GF = GF_Base(WorldNormal, WorldLightDir, WorldViewDir);
+				float GF = GF_Base(NdotL, NdotV);
 			#elif defined(GF_NEUMANN)
-			 	float GF = GF_Neumann(WorldNormal, WorldLightDir, WorldViewDir);
+			 	float GF = GF_Neumann(NdotL, NdotV);
 			#elif defined(GF_COOK_TORRANCE)
-				float GF = GF_Cook_Torrance(WorldNormal, WorldLightDir, WorldViewDir, H);
+				float GF = GF_Cook_Torrance(NdotH, NdotV, NdotL, VdotH);
 			#elif defined(GF_KELEMEN)
-				float GF = GF_Kelemen(WorldNormal, WorldLightDir, WorldViewDir, H);
+				float GF = GF_Kelemen(NdotL, NdotV, VdotH);
 			#elif defined(GF_SCHLICK_GGX)
-				float GF = GF_Schlick_GGX(WorldNormal, WorldLightDir, WorldViewDir, Roughness);
+				float GF = GF_Schlick_GGX(NdotV, NdotL, Roughness);
 			#endif
 
 				// ~~~~~ Reflectance Values ~~~~~
@@ -135,8 +148,8 @@
 				// ~~~~~ BRDF terms ~~~~~
 
 				half3 Ldiff = Diffuse_Lambertian(Rdiff);
-				half3 Lspec = Specular_Cook_Torrance(NDF, GF, Rspec, WorldViewDir, WorldLightDir, WorldNormal);
-				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, WorldNormal, WorldLightDir);
+				half3 Lspec = Specular_Cook_Torrance(NDF, GF, Rspec, NdotV, NdotL);
+				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, NdotL);
 
 				// ~~~~~ OUTPUT ~~~~~
 
@@ -158,7 +171,7 @@
 
 			#pragma multi_compile_fwdadd
 			#pragma shader_feature NDF_TROWBRIDGE_REITZ NDF_BECKMANN
-			#pragma shader_feature GF_SCHLICK_GGX GF_BASE GF_NEUMANN GF_COOK_TORRANCE GF_KELEMEN
+			#pragma shader_feature GF_NEUMANN GF_SCHLICK_GGX GF_BASE GF_COOK_TORRANCE GF_KELEMEN
 			#pragma shader_feature _NORMALMAP
 
 			#pragma skip_variants POINT_COOKIE
@@ -241,7 +254,7 @@
 				half3 Il = _LightColor0.rgb;
 				half4 DiffColor = _DiffColor * tex2D(_DiffMap, pIN.Texcoord);
 				half4 SpecColor = _SpecColorTMP * tex2D(_SpecMapTMP, pIN.Texcoord);
-				half Roughness = max(SpecColor.a * SpecColor.a, 0.01);
+				half Roughness = max(SpecColor.a, 0.0);
 			#if !defined(_NORMALMAP)
 				float3 WorldNormal = normalize(pIN.Normal);
 			#else
@@ -249,8 +262,21 @@
 				float3 WorldNormal = mul(pIN.TBNMatrix, Normal);
 			#endif
 				float3 WorldLightDir = normalize(pIN.WorldLightDir);
+
+				float NdotL = dot(WorldNormal, WorldLightDir);
+				if (NdotL <= 0.0)
+				{
+					pOUT.Color = half4(0.0, 0.0, 0.0, 1.0);
+					return;
+				}
+
 				float3 WorldViewDir = normalize(pIN.WorldViewDir);
 				float3 H = normalize(WorldLightDir + WorldViewDir);
+
+				float NdotV = dot(WorldNormal, WorldViewDir);
+				float NdotH = dot(WorldNormal, H);
+				float VdotH = dot(WorldViewDir, H);
+				float LdotH = dot(WorldLightDir, H);
 
 				// ~~~~~ Light Attenuation ~~~~~
 
@@ -263,21 +289,21 @@
 			// ~~~~~ Microfacet ~~~~~
 
 			#if defined(NDF_TROWBRIDGE_REITZ)
-				float NDF = NDF_Trowbridge_Reitz_GGX(WorldNormal, H, Roughness);
+				float NDF = NDF_Trowbridge_Reitz_GGX(NdotH, Roughness);
 			#elif defined(NDF_BECKMANN)
-				float NDF = NDF_Beckmann(WorldNormal, H, Roughness);
+				float NDF = NDF_Beckmann(NdotH, Roughness);
 			#endif
 
 			#if defined(GF_BASE)
-				float GF = GF_Base(WorldNormal, WorldLightDir, WorldViewDir);
+				float GF = GF_Base(NdotL, NdotV);
 			#elif defined(GF_NEUMANN)
-			 	float GF = GF_Neumann(WorldNormal, WorldLightDir, WorldViewDir);
+			 	float GF = GF_Neumann(NdotL, NdotV);
 			#elif defined(GF_COOK_TORRANCE)
-				float GF = GF_Cook_Torrance(WorldNormal, WorldLightDir, WorldViewDir, H);
+				float GF = GF_Cook_Torrance(NdotH, NdotV, NdotL, VdotH);
 			#elif defined(GF_KELEMEN)
-				float GF = GF_Kelemen(WorldNormal, WorldLightDir, WorldViewDir, H);
+				float GF = GF_Kelemen(NdotL, NdotV, VdotH);
 			#elif defined(GF_SCHLICK_GGX)
-				float GF = GF_Schlick_GGX(WorldNormal, WorldLightDir, WorldViewDir, Roughness);
+				float GF = GF_Schlick_GGX(NdotV, NdotL, Roughness);
 			#endif
 
 				// ~~~~~ Reflectance values ~~~~~
@@ -288,8 +314,8 @@
 				// ~~~~~ BRDF terms ~~~~~
 
 				half3 Ldiff = Diffuse_Lambertian(Rdiff);
-				half3 Lspec = Specular_Cook_Torrance(NDF, GF, Rspec, WorldViewDir, WorldLightDir, WorldNormal);
-				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, WorldNormal, WorldLightDir);
+				half3 Lspec = Specular_Cook_Torrance(NDF, GF, Rspec, NdotV, NdotL);
+				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, NdotL);
 
 				// ~~~~~ OUTPUT ~~~~~
 
