@@ -83,7 +83,7 @@ inline half3	Specular_Cook_Torrance(float NDF, float GF, half3 F, float NdotV, f
 
 /*! \brief Trowbridge-Reitz GGX term. It's a normal distribution function used by microfacet based BRDF.
  *
- *	D(h) = pow(a, 2) / PI * pow((pow(n.h, 2) * (pow(a, 2) - 1) + 1), 2)
+ *	D(h) = r2 / PI * (NdotH2 * (r2 - 1.0) + 1.0)2
  *
  * \param NdotH Dot product between the normal vector and the half vector.
  * \param roughness The surface's roughness. Controls both the size and power of the specular highlight.
@@ -99,7 +99,7 @@ inline float	NDF_Trowbridge_Reitz_GGX(float NdotH, float roughness)
 
 /*! \brief Beckmann term. It's a normal distribution function used by microfacet based BRDF.
  *
- *	D(h) = 1.0 / (PI * m2 * NdotH4) * exp( NdotH2 - 1 / m2 * NdotH2 ) 
+ *	D(h) = 1.0 / (PI * r2 * NdotH4) * exp -( 1.0 - NdotH2 / r2 * NdotH2 ) 
  *
  * \param NdotH Dot product between the normal vector and the half vector.
  * \param roughness The surface's roughness. Controls both the size and power of the specular highlight.
@@ -108,9 +108,13 @@ inline float	NDF_Beckmann(float NdotH, float roughness)
 {
 	float r = roughness * roughness;
 	float r2 = r * r;
-	float NdotH4 = pow(NdotH, 4);
 	float NdotH2 = NdotH * NdotH;
-	return (1.0 * ONE_OVER_PI * (1.0 / (r2 * NdotH4))) * exp((NdotH2 - 1.0) * (1.0 / (r2 * NdotH2)));
+	float NdotH4 = NdotH2 * NdotH2;
+	float t1 = ONE_OVER_PI * (1.0 / (r2 * NdotH4));
+	float t21 = 1.0 - NdotH2;
+	float t22 = 1.0 / (r2 * NdotH2);
+	float t2 = exp(-(t21 * t22));
+	return t1 * t2;
 }
 
 // ~~~~~ Geometry Function ~~~~~
@@ -141,7 +145,7 @@ inline float	GF_Neumann(float NdotL, float NdotV)
 
 /*! \brief Cook-Torrance term. It is a geometry function used by microfacet based BRDF.
  *
- *	G(l,v,h) = min(1, 2(n.h)(n.h) / v.h, 2(n.h)(n.l) / v.h)
+ *	G(l,v,h) = min(1, 2(n.h)(n.v) / v.h, 2(n.h)(n.l) / v.h)
  *
  * \param NdotH Dot product between the normal vector and the half vector.
  * \param NdotV Dot product between the normal vector and the view vector.
