@@ -332,7 +332,7 @@
 				Il *= (pIN.LightCoord.z > 0) * UnitySpotCookie(pIN.LightCoord) * UnitySpotAttenuate(pIN.LightCoord.xyz);
 			#endif
 
-			// ~~~~~ Microfacet ~~~~~
+				// ~~~~~ Microfacet ~~~~~
 
 			#if defined(NDF_TROWBRIDGE_REITZ)
 				float NDF = NDF_Trowbridge_Reitz_GGX(NdotH, Roughness);
