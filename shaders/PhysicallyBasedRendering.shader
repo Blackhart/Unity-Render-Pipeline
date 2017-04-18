@@ -27,7 +27,7 @@
 
 			#pragma multi_compile_fwdbase
 			#pragma shader_feature NDF_TROWBRIDGE_REITZ NDF_BECKMANN
-			#pragma shader_feature GF_NEUMANN GF_SCHLICK_GGX GF_BASE GF_COOK_TORRANCE GF_KELEMEN
+			#pragma shader_feature GF_SCHLICK_GGX GF_NEUMANN GF_BASE GF_COOK_TORRANCE GF_KELEMEN
 			#pragma shader_feature _NORMALMAP
 
 			#pragma vertex vert
@@ -171,7 +171,7 @@
 
 			#pragma multi_compile_fwdadd
 			#pragma shader_feature NDF_TROWBRIDGE_REITZ NDF_BECKMANN
-			#pragma shader_feature GF_NEUMANN GF_SCHLICK_GGX GF_BASE GF_COOK_TORRANCE GF_KELEMEN
+			#pragma shader_feature GF_SCHLICK_GGX GF_NEUMANN GF_BASE GF_COOK_TORRANCE GF_KELEMEN
 			#pragma shader_feature _NORMALMAP
 
 			#pragma skip_variants POINT_COOKIE
