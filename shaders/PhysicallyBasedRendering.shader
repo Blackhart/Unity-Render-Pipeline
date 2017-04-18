@@ -7,6 +7,7 @@
 		_SpecMapTMP ("SpecMap", 2D) = "white" {}
 		_SpecColorTMP ("SpecColor", Color) = (1.0, 1.0, 1.0, 1.0)
 		_NormalMap ("NormalMap", 2D) = "bump" {}
+		_OcclusionMap ("OcclusionMap", 2D) = "white" {}
 	}
 	SubShader
 	{
@@ -47,6 +48,8 @@
 			half4		_SpecColorTMP;
 			sampler2D	_NormalMap;
 			float4		_NormalMap_ST;
+			sampler2D	_OcclusionMap;
+			float4		_OcclusionMap_ST;
 
 
 			struct vertOutput
@@ -103,6 +106,7 @@
 				fixed3 Normal = UnpackNormal(tex2D(_NormalMap, pIN.Texcoord));
 				float3 WorldNormal = mul(pIN.TBNMatrix, Normal);
 			#endif
+				half4 Occlusion = tex2D(_OcclusionMap, pIN.Texcoord);
 				float3 WorldLightDir = normalize(pIN.WorldLightDir);
 
 				float NdotL = dot(WorldNormal, WorldLightDir);
@@ -149,7 +153,7 @@
 
 				half3 Ldiff = Diffuse_Lambertian(Rdiff);
 				half3 Lspec = Specular_Cook_Torrance(NDF, GF, Rspec, NdotV, NdotL);
-				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, NdotL);
+				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, NdotL) * Occlusion;
 
 				// ~~~~~ OUTPUT ~~~~~
 
@@ -195,6 +199,8 @@
 			half4		_SpecColorTMP;
 			sampler2D	_NormalMap;
 			float4		_NormalMap_ST;
+			sampler2D	_OcclusionMap;
+			float4		_OcclusionMap_ST;
 
 
 			struct vertOutput
@@ -261,6 +267,7 @@
 				fixed3 Normal = UnpackNormal(tex2D(_NormalMap, pIN.Texcoord));
 				float3 WorldNormal = mul(pIN.TBNMatrix, Normal);
 			#endif
+				half4 Occlusion = tex2D(_OcclusionMap, pIN.Texcoord);
 				float3 WorldLightDir = normalize(pIN.WorldLightDir);
 
 				float NdotL = dot(WorldNormal, WorldLightDir);
@@ -315,7 +322,7 @@
 
 				half3 Ldiff = Diffuse_Lambertian(Rdiff);
 				half3 Lspec = Specular_Cook_Torrance(NDF, GF, Rspec, NdotV, NdotL);
-				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, NdotL);
+				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, NdotL) * Occlusion;
 
 				// ~~~~~ OUTPUT ~~~~~
 

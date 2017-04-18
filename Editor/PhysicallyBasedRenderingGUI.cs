@@ -49,10 +49,12 @@ namespace UnityEditor
 		private MaterialProperty	__SpecMap;
 		private MaterialProperty	__SpecColor;
 		private MaterialProperty	__NormalMap;
+		private MaterialProperty	__OcclusionMap;
 
 		private static GUIContent	__DiffValue_Text = new GUIContent("Diffuse");
 		private static GUIContent	__SpecValue_Text = new GUIContent("Specular (R,G,B) | Smoothness (A)");
 		private static GUIContent	__NormalMap_Text = new GUIContent("Normal");
+		private static GUIContent	__OcclusionMap_Text = new GUIContent("Occlusion");
 
 		#endregion
 
@@ -147,6 +149,7 @@ namespace UnityEditor
 			__SpecMap = null;
 			__SpecColor = null;
 			__NormalMap = null;
+			__OcclusionMap = null;
 		}
 
 		#endregion
@@ -174,6 +177,7 @@ namespace UnityEditor
 			__SpecColor = FindProperty("_SpecColorTMP", pProperties);
 			__Smoothness = __SpecColor.colorValue.a;
 			__NormalMap = FindProperty("_NormalMap", pProperties);
+			__OcclusionMap = FindProperty("_OcclusionMap", pProperties);
 		}
 
 		private void	DrawProperties(MaterialEditor pMaterialEditor)
@@ -202,12 +206,19 @@ namespace UnityEditor
 
 			pMaterialEditor.TexturePropertySingleLine(__DiffValue_Text, __DiffMap, __DiffColor);
 			EditorGUILayout.BeginHorizontal();
-				pMaterialEditor.TexturePropertySingleLine(__SpecValue_Text, __SpecMap, __SpecColor);
-				__Smoothness = EditorGUILayout.Slider(__Smoothness, 0.0f, 1.0f);
-				Color lSpecColor = __SpecColor.colorValue;
-				lSpecColor.a = __Smoothness;
-				__SpecColor.colorValue = lSpecColor;
-			EditorGUILayout.EndVertical();
+			pMaterialEditor.TexturePropertySingleLine(__SpecValue_Text, __SpecMap, __SpecMap.textureValue == null ? __SpecColor : null);
+			__Smoothness = EditorGUILayout.Slider(__Smoothness, 0.0f, 1.0f);
+			Color lSpecColor = __SpecColor.colorValue;
+			lSpecColor.a = __Smoothness;
+			if (__SpecMap.textureValue != null) 
+			{
+				lSpecColor.r = 1.0f;
+				lSpecColor.g = 1.0f;
+				lSpecColor.b = 1.0f;
+			}
+			__SpecColor.colorValue = lSpecColor;
+			EditorGUILayout.EndHorizontal();
+			pMaterialEditor.TexturePropertySingleLine(__OcclusionMap_Text, __OcclusionMap);
 
 			EditorGUILayout.Space ();
 			EditorGUILayout.Space ();
