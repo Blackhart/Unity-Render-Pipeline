@@ -42,7 +42,7 @@ namespace UnityEditor
 
 		private Material	__material;
 
-		private float	__Roughness;
+		private float	__Smoothness;
 
 		private MaterialProperty	__DiffMap;
 		private MaterialProperty	__DiffColor;
@@ -51,7 +51,7 @@ namespace UnityEditor
 		private MaterialProperty	__NormalMap;
 
 		private static GUIContent	__DiffValue_Text = new GUIContent("Diffuse");
-		private static GUIContent	__SpecValue_Text = new GUIContent("Specular (R,G,B) | Roughness (A)");
+		private static GUIContent	__SpecValue_Text = new GUIContent("Specular (R,G,B) | Smoothness (A)");
 		private static GUIContent	__NormalMap_Text = new GUIContent("Normal");
 
 		#endregion
@@ -172,7 +172,7 @@ namespace UnityEditor
 			__DiffColor = FindProperty("_DiffColor", pProperties);
 			__SpecMap = FindProperty("_SpecMapTMP", pProperties);
 			__SpecColor = FindProperty("_SpecColorTMP", pProperties);
-			__Roughness = __SpecColor.colorValue.a;
+			__Smoothness = __SpecColor.colorValue.a;
 			__NormalMap = FindProperty("_NormalMap", pProperties);
 		}
 
@@ -203,9 +203,9 @@ namespace UnityEditor
 			pMaterialEditor.TexturePropertySingleLine(__DiffValue_Text, __DiffMap, __DiffColor);
 			EditorGUILayout.BeginHorizontal();
 				pMaterialEditor.TexturePropertySingleLine(__SpecValue_Text, __SpecMap, __SpecColor);
-				__Roughness = EditorGUILayout.Slider(__Roughness, 0.0f, 1.0f);
+				__Smoothness = EditorGUILayout.Slider(__Smoothness, 0.0f, 1.0f);
 				Color lSpecColor = __SpecColor.colorValue;
-				lSpecColor.a = __Roughness;
+				lSpecColor.a = __Smoothness;
 				__SpecColor.colorValue = lSpecColor;
 			EditorGUILayout.EndVertical();
 

@@ -96,7 +96,7 @@
 				half3 Il = _LightColor0.rgb;
 				half4 DiffColor = _DiffColor * tex2D(_DiffMap, pIN.Texcoord);
 				half4 SpecColor = _SpecColorTMP * tex2D(_SpecMapTMP, pIN.Texcoord);
-				half Roughness = max(SpecColor.a, 0.0);
+				half Roughness = max(1.0 - SpecColor.a, 0.0);
 			#if !defined(_NORMALMAP)
 				float3 WorldNormal = normalize(pIN.Normal);
 			#else
@@ -254,7 +254,7 @@
 				half3 Il = _LightColor0.rgb;
 				half4 DiffColor = _DiffColor * tex2D(_DiffMap, pIN.Texcoord);
 				half4 SpecColor = _SpecColorTMP * tex2D(_SpecMapTMP, pIN.Texcoord);
-				half Roughness = max(SpecColor.a, 0.0);
+				half Roughness = max(1.0 - SpecColor.a, 0.0);
 			#if !defined(_NORMALMAP)
 				float3 WorldNormal = normalize(pIN.Normal);
 			#else
