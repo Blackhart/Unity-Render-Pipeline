@@ -184,7 +184,8 @@ inline float	GF_Kelemen(float NdotL, float NdotV, float VdotH)
  */
 inline float	GF_Schlick_GGX(float NdotV, float NdotL, float roughness)
 {
-	float k = (roughness + 1.0) * (roughness + 1.0) * 0.125;
+	roughness = (roughness + 1.0) / 2.0;
+	float k = roughness / 2.0;
 	float Gv = NdotV * (1.0 / (NdotV * (1.0 - k) + k));
 	float Gl = NdotL * (1.0 / (NdotL * (1.0 - k) + k));
 	return Gv * Gl;
