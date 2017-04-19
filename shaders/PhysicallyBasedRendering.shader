@@ -193,7 +193,7 @@
 
 			CGPROGRAM
 
-			#pragma multi_compile_fwdadd
+			#pragma multi_compile_fwdadd_fullshadows
 			#pragma shader_feature NDF_TROWBRIDGE_REITZ NDF_BECKMANN
 			#pragma shader_feature GF_SCHLICK_GGX GF_NEUMANN GF_BASE GF_COOK_TORRANCE GF_KELEMEN
 			#pragma shader_feature _NORMALMAP
@@ -361,7 +361,7 @@
 
 				half3 Ldiff = Diffuse_Lambertian(Rdiff);
 				half3 Lspec = Specular_Cook_Torrance(NDF, GF, Rspec, NdotV, NdotL);
-				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, NdotL) * Occlusion;
+				half3 L0 = (Ldiff + Lspec) * Irradiance(Il, NdotL) * Occlusion * Shadow;
 
 				// ~~~~~ OUTPUT ~~~~~
 
