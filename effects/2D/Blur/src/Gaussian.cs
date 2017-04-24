@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 
@@ -37,9 +35,8 @@ namespace Effects
 			Uninitialize();
 		}
 
-		public void	OnGUI()
+		public void	LateUpdate()
 		{
-			Debug.Log("Gaussian");
 			Process();
 		}
 
@@ -52,7 +49,7 @@ namespace Effects
 			if (__commandBuffer != null)
 				__commandBuffer.Clear();
 			__commandBuffer = null;
-			Material lMaterial = GetComponent<Image> ().material;
+			Material lMaterial = GetComponent<Image>().material;
 			lMaterial.EnableKeyword("MAIN_TEX");
 			lMaterial.DisableKeyword("OVERRIDE_TEX");
 		}
@@ -72,21 +69,29 @@ namespace Effects
 			int lWidth = lImage.sprite.texture.width;
 			int lHeight = lImage.sprite.texture.height;
 
-			int	lRenderTargetID = Shader.PropertyToID("_RenderTarget");
-			__commandBuffer.GetTemporaryRT(lRenderTargetID, lWidth, lHeight);
+			int	lRenderTarget1ID = Shader.PropertyToID("_RenderTarget1");
+			int lRenderTarget2ID = Shader.PropertyToID("_RenderTarget2");
+			__commandBuffer.GetTemporaryRT(lRenderTarget1ID, lWidth, lHeight);
+			__commandBuffer.GetTemporaryRT(lRenderTarget2ID, lWidth, lHeight);
 
-			__commandBuffer.Blit(lImage.sprite.texture, lRenderTargetID, __material);
+			__commandBuffer.SetGlobalFloat("_Width", lWidth);
+			__commandBuffer.SetGlobalFloat("_Height", lHeight);
+
+			__commandBuffer.EnableShaderKeyword("HORIZONTAL");
+			__commandBuffer.DisableShaderKeyword("VERTICAL");
+			__commandBuffer.Blit(lImage.sprite.texture, lRenderTarget1ID, __material);
 
 			__blurredTextureID = Shader.PropertyToID("_BlurredTexture");
-			__commandBuffer.SetGlobalTexture(__blurredTextureID, lRenderTargetID);
+			__commandBuffer.SetGlobalTexture(__blurredTextureID, lRenderTarget1ID);
 
-			__commandBuffer.ReleaseTemporaryRT(lRenderTargetID);
+			__commandBuffer.ReleaseTemporaryRT(lRenderTarget1ID);
+			__commandBuffer.ReleaseTemporaryRT(lRenderTarget2ID);
 		}
 
 		private void	Process()
 		{
 			if (__commandBuffer == null)
-				Initialize ();
+				Initialize();
 			
 			Graphics.ExecuteCommandBuffer(__commandBuffer);
 
