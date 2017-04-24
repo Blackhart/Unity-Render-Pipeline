@@ -1,8 +1,9 @@
-﻿Shader "Development/Gaussian"
+﻿Shader "Development/Default"
 {
 	Properties
 	{
 		[PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
+		_OverrideTex ("Override Sprite Texture", 2D) = "white" {}
 
 		_StencilComp ("Stencil Comparison", Float) = 8
 		_Stencil ("Stencil ID", Float) = 0
@@ -47,6 +48,7 @@
 			CGPROGRAM
 
 			#pragma multi_compile __ UNITY_UI_ALPHACLIP
+			#pragma multi_compile MAIN_TEX OVERRIDE_TEX
 
 			#pragma vertex vert
 			#pragma fragment frag
@@ -54,7 +56,11 @@
 			#include "UnityCG.cginc"
 			#include "UnityUI.cginc"
 
+		#if defined (MAIN_TEX)
 			sampler2D _MainTex;
+		#elif defined (OVERRIDE_TEX)
+			sampler2D _OverrideTex;
+		#endif
 			float4 _ClipRect; // Filled when using the Rect Mask 2D component
 
 			struct vertOutput
@@ -97,8 +103,11 @@
 
 			void	frag(in vertOutput pIN, out fragOutput pOUT)
 			{
-				half4 color = tex2D(_MainTex, pIN.texcoord) * pIN.color;
-				pOUT.color = color;
+			#if defined (MAIN_TEX)
+				pOUT.color = tex2D(_MainTex, pIN.texcoord) * pIN.color;
+			#elif defined (OVERRIDE_TEX)
+				pOUT.color = tex2D(_OverrideTex, pIN.texcoord) * pIN.color;
+			#endif
 
 				pOUT.color.a *= UnityGet2DClipping(pIN.worldPos.xy, _ClipRect); // Masking with Rect Mask 2D component
 
