@@ -48,7 +48,7 @@
 			CGPROGRAM
 
 			#pragma multi_compile __ UNITY_UI_ALPHACLIP
-			#pragma multi_compile MAIN_TEX OVERRIDE_TEX
+			#pragma shader_feature MAIN_TEX OVERRIDE_TEX
 
 			#pragma vertex vert
 			#pragma fragment frag
@@ -103,17 +103,19 @@
 
 			void	frag(in vertOutput pIN, out fragOutput pOUT)
 			{
+
 			#if defined (MAIN_TEX)
 				pOUT.color = tex2D(_MainTex, pIN.texcoord) * pIN.color;
 			#elif defined (OVERRIDE_TEX)
 				pOUT.color = tex2D(_OverrideTex, pIN.texcoord) * pIN.color;
 			#endif
-
+				
 				pOUT.color.a *= UnityGet2DClipping(pIN.worldPos.xy, _ClipRect); // Masking with Rect Mask 2D component
-
+				
 			#ifdef UNITY_UI_ALPHACLIP
 				clip (pOUT.color.a - 0.001);
 			#endif
+
 			}
 
 			ENDCG

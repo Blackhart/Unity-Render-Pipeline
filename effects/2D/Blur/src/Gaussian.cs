@@ -29,18 +29,18 @@ namespace Effects
 
 		public void	OnDestroy()
 		{
-			Uninitialize ();
+			Uninitialize();
 		}
 
 		public void	OnDisable()
 		{
-			Uninitialize ();
+			Uninitialize();
 		}
 
 		public void	OnGUI()
 		{
-			Debug.Log ("Gaussian");
-			Process ();
+			Debug.Log("Gaussian");
+			Process();
 		}
 
 		#endregion
@@ -50,34 +50,37 @@ namespace Effects
 		private void	Uninitialize()
 		{
 			if (__commandBuffer != null)
-				__commandBuffer.Clear ();
+				__commandBuffer.Clear();
 			__commandBuffer = null;
+			Material lMaterial = GetComponent<Image> ().material;
+			lMaterial.EnableKeyword("MAIN_TEX");
+			lMaterial.DisableKeyword("OVERRIDE_TEX");
 		}
 
 		private void	Initialize()
 		{
 			if (__material == null)
 			{
-				__material = new Material (__gaussian);
+				__material = new Material(__gaussian);
 				__material.hideFlags = HideFlags.HideAndDontSave;
 			}
 
-			__commandBuffer = new CommandBuffer ();
+			__commandBuffer = new CommandBuffer();
 			__commandBuffer.name = "Object: " + transform.name + " 2D Gaussian Blur";
 
-			Image lImage = GetComponent<Image> ();
+			Image lImage = GetComponent<Image>();
 			int lWidth = lImage.sprite.texture.width;
 			int lHeight = lImage.sprite.texture.height;
 
-			int	lRenderTargetID = Shader.PropertyToID ("_RenderTarget");
-			__commandBuffer.GetTemporaryRT (lRenderTargetID, lWidth, lHeight);
+			int	lRenderTargetID = Shader.PropertyToID("_RenderTarget");
+			__commandBuffer.GetTemporaryRT(lRenderTargetID, lWidth, lHeight);
 
-			__commandBuffer.Blit (lImage.sprite.texture, lRenderTargetID, __material);
+			__commandBuffer.Blit(lImage.sprite.texture, lRenderTargetID, __material);
 
 			__blurredTextureID = Shader.PropertyToID("_BlurredTexture");
-			__commandBuffer.SetGlobalTexture (__blurredTextureID, lRenderTargetID);
+			__commandBuffer.SetGlobalTexture(__blurredTextureID, lRenderTargetID);
 
-			__commandBuffer.ReleaseTemporaryRT (lRenderTargetID);
+			__commandBuffer.ReleaseTemporaryRT(lRenderTargetID);
 		}
 
 		private void	Process()
@@ -85,18 +88,24 @@ namespace Effects
 			if (__commandBuffer == null)
 				Initialize ();
 			
-			Graphics.ExecuteCommandBuffer (__commandBuffer);
+			Graphics.ExecuteCommandBuffer(__commandBuffer);
 
 			Texture lBlurredTexture = Shader.GetGlobalTexture(__blurredTextureID);
 			if (lBlurredTexture != null)
 				__blurredTexture = lBlurredTexture;
 
+			Material lMaterial = GetComponent<Image>().material;
 			if (__blurredTexture != null)
-				GetComponent<Image> ().material.EnableKeyword("OVERRIDE_TEX");
+			{
+				lMaterial.EnableKeyword("OVERRIDE_TEX");
+				lMaterial.DisableKeyword("MAIN_TEX");
+				lMaterial.SetTexture("_OverrideTex", __blurredTexture);			
+			} 
 			else
-				GetComponent<Image> ().material.EnableKeyword("MAIN_TEX");
-			
-			GetComponent<Image> ().material.SetTexture("_OverrideTex", __blurredTexture);			
+			{
+				lMaterial.DisableKeyword("OVERRIDE_TEX");
+				lMaterial.EnableKeyword("MAIN_TEX");
+			}			
 		}
 
 		#endregion
