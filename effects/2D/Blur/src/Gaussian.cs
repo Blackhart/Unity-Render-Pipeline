@@ -15,10 +15,8 @@ namespace Effects
 		[SerializeField]
 		private Shader 			__gaussian = null;
 		private Material 		__material = null;
-
-		private int	__blurredTextureID = -1;
-		private Texture	__blurredTexture = null;
-		private Sprite	__output = null;
+		private int				__blurredTextureID = -1;
+		private Texture			__blurredTexture = null;
 
 		#endregion
 
@@ -68,13 +66,13 @@ namespace Effects
 			__commandBuffer.name = "Object: " + transform.name + " 2D Gaussian Blur";
 
 			Image lImage = GetComponent<Image> ();
-			int lWidth = lImage.Sprite.texture.width;
-			int lHeight = lImage.Sprite.texture.height;
+			int lWidth = lImage.sprite.texture.width;
+			int lHeight = lImage.sprite.texture.height;
 
 			int	lRenderTargetID = Shader.PropertyToID ("_RenderTarget");
 			__commandBuffer.GetTemporaryRT (lRenderTargetID, lWidth, lHeight);
 
-			__commandBuffer.Blit (lImage.Sprite.texture, lRenderTargetID, __material);
+			__commandBuffer.Blit (lImage.sprite.texture, lRenderTargetID, __material);
 
 			__blurredTextureID = Shader.PropertyToID("_BlurredTexture");
 			__commandBuffer.SetGlobalTexture (__blurredTextureID, lRenderTargetID);
@@ -93,8 +91,12 @@ namespace Effects
 			if (lBlurredTexture != null)
 				__blurredTexture = lBlurredTexture;
 
-			GetComponent<Image> ().material.EnableKeyword("OVERRIDE_TEX");
-			GetComponent<Image> ().material.SetTexture("_OverrideTex", lBlurredTexture);			
+			if (__blurredTexture != null)
+				GetComponent<Image> ().material.EnableKeyword("OVERRIDE_TEX");
+			else
+				GetComponent<Image> ().material.EnableKeyword("MAIN_TEX");
+			
+			GetComponent<Image> ().material.SetTexture("_OverrideTex", __blurredTexture);			
 		}
 
 		#endregion
