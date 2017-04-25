@@ -9,12 +9,28 @@ namespace Effects
 	{
 		#region Parameters
 
+		private static readonly string	SHADER_NAME = "Development/Gaussian";
+
 		private CommandBuffer	__commandBuffer = null;
-		[SerializeField]
-		private Shader 			__gaussian = null;
 		private Material 		__material = null;
 		private int				__blurredTextureID = -1;
 		private Texture			__blurredTexture = null;
+		[SerializeField]
+		private int				__downsampling = 1;
+
+		#endregion
+
+		#region Properties
+
+		public int	Downsampling
+		{
+			get { return __downsampling; }
+			set 
+			{
+				__downsampling = value;
+				Initialize();
+			}
+		}
 
 		#endregion
 
@@ -58,7 +74,7 @@ namespace Effects
 		{
 			if (__material == null)
 			{
-				__material = new Material(__gaussian);
+				__material = new Material(Shader.Find(SHADER_NAME));
 				__material.hideFlags = HideFlags.HideAndDontSave;
 			}
 
@@ -66,8 +82,8 @@ namespace Effects
 			__commandBuffer.name = "Object: " + transform.name + " 2D Gaussian Blur";
 
 			Image lImage = GetComponent<Image>();
-			int lWidth = lImage.sprite.texture.width;
-			int lHeight = lImage.sprite.texture.height;
+			int lWidth = lImage.sprite.texture.width / __downsampling;
+			int lHeight = lImage.sprite.texture.height / __downsampling;
 
 			int	lRenderTarget1ID = Shader.PropertyToID("_RenderTarget1");
 			int lRenderTarget2ID = Shader.PropertyToID("_RenderTarget2");
@@ -76,7 +92,7 @@ namespace Effects
 
 			__commandBuffer.SetGlobalFloat("_Width", lWidth);
 			__commandBuffer.SetGlobalFloat("_Height", lHeight);
-			__commandBuffer.SetGlobalFloatArray("_Weight", new float[3] { 0.38774f, 0.24477f, 0.06136f });
+			__commandBuffer.SetGlobalFloatArray("_Weight", new float[4] { 0.23463f, 0.20111f, 0.12569f, 0.05586f });
 
 			__commandBuffer.EnableShaderKeyword("HORIZONTAL");
 			__commandBuffer.DisableShaderKeyword("VERTICAL");

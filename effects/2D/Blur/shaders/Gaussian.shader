@@ -51,12 +51,12 @@
 			sampler2D	_MainTex;
 			int			_Width;
 			int			_Height;
-			float		_Weight[3];
+			float		_Weight[4];
 
 			struct vertOutput
 			{
 				float4 clipPos : SV_POSITION;
-				float2 texcoord[5] : TEXCOORD0;
+				float2 texcoord[7] : TEXCOORD0;
 			};
 
 			void	vert(in appdata_base pIN, out vertOutput pOUT)
@@ -66,19 +66,25 @@
 			#if defined(HORIZONTAL)
 				float x = 1.0 / (float)_Width;
 				float xc = 2.0 * x;
-				pOUT.texcoord[0] = float2(pIN.texcoord.x - xc, pIN.texcoord.y);
-				pOUT.texcoord[1] = float2(pIN.texcoord.x - x, pIN.texcoord.y);
-				pOUT.texcoord[2] = pIN.texcoord;
-				pOUT.texcoord[3] = float2(pIN.texcoord.x + x, pIN.texcoord.y);
-				pOUT.texcoord[4] = float2(pIN.texcoord.x + xc, pIN.texcoord.y);
+				float xcc = 3.0 * x;
+				pOUT.texcoord[0] = float2(pIN.texcoord.x - xcc, pIN.texcoord.y);
+				pOUT.texcoord[1] = float2(pIN.texcoord.x - xc, pIN.texcoord.y);
+				pOUT.texcoord[2] = float2(pIN.texcoord.x - x, pIN.texcoord.y);
+				pOUT.texcoord[3] = pIN.texcoord;
+				pOUT.texcoord[4] = float2(pIN.texcoord.x + x, pIN.texcoord.y);
+				pOUT.texcoord[5] = float2(pIN.texcoord.x + xc, pIN.texcoord.y);
+				pOUT.texcoord[6] = float2(pIN.texcoord.x + xcc, pIN.texcoord.y);
 			#elif defined(VERTICAL)
 				float y = 1.0 / (float)_Height;
 				float yc = 2.0 * y;
-				pOUT.texcoord[0] = float2(pIN.texcoord.x, pIN.texcoord.y - yc);
-				pOUT.texcoord[1] = float2(pIN.texcoord.x, pIN.texcoord.y - y);
-				pOUT.texcoord[2] = pIN.texcoord;
-				pOUT.texcoord[3] = float2(pIN.texcoord.x, pIN.texcoord.y + y);
-				pOUT.texcoord[4] = float2(pIN.texcoord.x, pIN.texcoord.y + yc);
+				float ycc = 3.0 * y;
+				pOUT.texcoord[0] = float2(pIN.texcoord.x, pIN.texcoord.y - ycc);
+				pOUT.texcoord[1] = float2(pIN.texcoord.x, pIN.texcoord.y - yc);
+				pOUT.texcoord[2] = float2(pIN.texcoord.x, pIN.texcoord.y - y);
+				pOUT.texcoord[3] = pIN.texcoord;
+				pOUT.texcoord[4] = float2(pIN.texcoord.x, pIN.texcoord.y + y);
+				pOUT.texcoord[5] = float2(pIN.texcoord.x, pIN.texcoord.y + yc);
+				pOUT.texcoord[6] = float2(pIN.texcoord.x, pIN.texcoord.y + ycc);
 			#endif
 
 				// ~~~~~ Output ~~~~~
@@ -94,11 +100,13 @@
 			void	frag(in vertOutput pIN, out fragOutput pOUT)
 			{
 				half4 color = half4(0.0, 0.0, 0.0, 0.0);
-				color += tex2D(_MainTex, pIN.texcoord[0]) * _Weight[2];
-				color += tex2D(_MainTex, pIN.texcoord[1]) * _Weight[1];
-				color += tex2D(_MainTex, pIN.texcoord[2]) * _Weight[0];
-				color += tex2D(_MainTex, pIN.texcoord[3]) * _Weight[1];
-				color += tex2D(_MainTex, pIN.texcoord[4]) * _Weight[2];
+				color += tex2D(_MainTex, pIN.texcoord[0]) * _Weight[3];
+				color += tex2D(_MainTex, pIN.texcoord[1]) * _Weight[2];
+				color += tex2D(_MainTex, pIN.texcoord[2]) * _Weight[1];
+				color += tex2D(_MainTex, pIN.texcoord[3]) * _Weight[0];
+				color += tex2D(_MainTex, pIN.texcoord[4]) * _Weight[1];
+				color += tex2D(_MainTex, pIN.texcoord[5]) * _Weight[2];
+				color += tex2D(_MainTex, pIN.texcoord[6]) * _Weight[3];
 				pOUT.color = color;
 			}
 
