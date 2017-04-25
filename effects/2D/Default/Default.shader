@@ -3,7 +3,6 @@
 	Properties
 	{
 		[PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
-		_OverrideTex ("Override Sprite Texture", 2D) = "white" {}
 
 		_StencilComp ("Stencil Comparison", Float) = 8
 		_Stencil ("Stencil ID", Float) = 0

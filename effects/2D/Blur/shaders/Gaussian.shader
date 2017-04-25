@@ -4,9 +4,6 @@
 	{
 		_MainTex ("Sprite Texture", 2D) = "white" {}
 
-		_Width ("Width", Int) = 0
-		_Height ("Height", Int) = 0
-
 		_StencilComp ("Stencil Comparison", Float) = 8
 		_Stencil ("Stencil ID", Float) = 0
 		_StencilOp ("Stencil Operation", Float) = 0
@@ -54,6 +51,7 @@
 			sampler2D	_MainTex;
 			int			_Width;
 			int			_Height;
+			float		_Weight[3];
 
 			struct vertOutput
 			{
@@ -75,7 +73,7 @@
 				pOUT.texcoord[4] = float2(pIN.texcoord.x + xc, pIN.texcoord.y);
 			#elif defined(VERTICAL)
 				float y = 1.0 / (float)_Height;
-				float yc = 2.0 * x;
+				float yc = 2.0 * y;
 				pOUT.texcoord[0] = float2(pIN.texcoord.x, pIN.texcoord.y - yc);
 				pOUT.texcoord[1] = float2(pIN.texcoord.x, pIN.texcoord.y - y);
 				pOUT.texcoord[2] = pIN.texcoord;
@@ -95,7 +93,13 @@
 
 			void	frag(in vertOutput pIN, out fragOutput pOUT)
 			{
-				pOUT.color = tex2D(_MainTex, pIN.texcoord[0]);
+				half4 color = half4(0.0, 0.0, 0.0, 0.0);
+				color += tex2D(_MainTex, pIN.texcoord[0]) * _Weight[2];
+				color += tex2D(_MainTex, pIN.texcoord[1]) * _Weight[1];
+				color += tex2D(_MainTex, pIN.texcoord[2]) * _Weight[0];
+				color += tex2D(_MainTex, pIN.texcoord[3]) * _Weight[1];
+				color += tex2D(_MainTex, pIN.texcoord[4]) * _Weight[2];
+				pOUT.color = color;
 			}
 
 			ENDCG

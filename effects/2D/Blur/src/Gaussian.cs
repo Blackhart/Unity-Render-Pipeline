@@ -71,18 +71,23 @@ namespace Effects
 
 			int	lRenderTarget1ID = Shader.PropertyToID("_RenderTarget1");
 			int lRenderTarget2ID = Shader.PropertyToID("_RenderTarget2");
-			__commandBuffer.GetTemporaryRT(lRenderTarget1ID, lWidth, lHeight);
-			__commandBuffer.GetTemporaryRT(lRenderTarget2ID, lWidth, lHeight);
+			__commandBuffer.GetTemporaryRT(lRenderTarget1ID, lWidth, lHeight, 0, lImage.sprite.texture.filterMode);
+			__commandBuffer.GetTemporaryRT(lRenderTarget2ID, lWidth, lHeight, 0, lImage.sprite.texture.filterMode);
 
 			__commandBuffer.SetGlobalFloat("_Width", lWidth);
 			__commandBuffer.SetGlobalFloat("_Height", lHeight);
+			__commandBuffer.SetGlobalFloatArray("_Weight", new float[3] { 0.38774f, 0.24477f, 0.06136f });
 
 			__commandBuffer.EnableShaderKeyword("HORIZONTAL");
 			__commandBuffer.DisableShaderKeyword("VERTICAL");
 			__commandBuffer.Blit(lImage.sprite.texture, lRenderTarget1ID, __material);
 
+			__commandBuffer.EnableShaderKeyword("VERTICAL");
+			__commandBuffer.DisableShaderKeyword("HORIZONTAL");
+			__commandBuffer.Blit(lRenderTarget1ID, lRenderTarget2ID, __material);
+
 			__blurredTextureID = Shader.PropertyToID("_BlurredTexture");
-			__commandBuffer.SetGlobalTexture(__blurredTextureID, lRenderTarget1ID);
+			__commandBuffer.SetGlobalTexture(__blurredTextureID, lRenderTarget2ID);
 
 			__commandBuffer.ReleaseTemporaryRT(lRenderTarget1ID);
 			__commandBuffer.ReleaseTemporaryRT(lRenderTarget2ID);
