@@ -1,8 +1,9 @@
-﻿Shader "Development/Default"
+﻿Shader "URP/Default"
 {
 	Properties
 	{
 		[PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
+		_Color ("Tint", Color) = (1.0, 1.0, 1.0, 1.0)
 
 		_StencilComp ("Stencil Comparison", Float) = 8
 		_Stencil ("Stencil ID", Float) = 0
@@ -33,8 +34,7 @@
 			ReadMask [_StencilReadMask]
 			WriteMask [_StencilWriteMask]
 		}
-		
-		LOD 100
+
 		Lighting Off // Lighting sets to off
 		ColorMask [_ColorMask] // Mask the picture when you add a Mask component on it
 
@@ -43,6 +43,7 @@
 			Cull Off // Culling sets to off
 			ZWrite Off // ZWrite sets to off
 			ZTest [unity_GUIZTestMode]
+			Blend SrcAlpha OneMinusSrcAlpha
 
 			CGPROGRAM
 
@@ -56,11 +57,13 @@
 			#include "UnityUI.cginc"
 
 		#if defined (MAIN_TEX)
-			sampler2D _MainTex;
+			sampler2D	_MainTex;
 		#elif defined (OVERRIDE_TEX)
-			sampler2D _OverrideTex;
+			sampler2D	_OverrideTex;
 		#endif
-			float4 _ClipRect; // Filled when using the Rect Mask 2D component
+			fixed4	_TextureSampleAdd;
+			float4	_ClipRect; // Filled when using the Rect Mask 2D component
+			fixed4	_Color;
 
 			struct vertOutput
 			{
@@ -86,7 +89,7 @@
 
 				// ~~~~~ Data ~~~~~
 
-				pOUT.color = pIN.color; // Additional per vertex color used by some components such as [Selectable | etc ]
+				pOUT.color = pIN.color * _Color; // Additional per vertex color used by some components such as [Selectable | etc ]
 				pOUT.texcoord = pIN.texcoord;
 				pOUT.worldPos = pIN.vertex;
 
@@ -104,9 +107,9 @@
 			{
 
 			#if defined (MAIN_TEX)
-				pOUT.color = tex2D(_MainTex, pIN.texcoord) * pIN.color;
+				pOUT.color = (tex2D(_MainTex, pIN.texcoord) + _TextureSampleAdd) * pIN.color;
 			#elif defined (OVERRIDE_TEX)
-				pOUT.color = tex2D(_OverrideTex, pIN.texcoord) * pIN.color;
+				pOUT.color = (tex2D(_OverrideTex, pIN.texcoord) + _TextureSampleAdd) * pIN.color;
 			#endif
 				
 				pOUT.color.a *= UnityGet2DClipping(pIN.worldPos.xy, _ClipRect); // Masking with Rect Mask 2D component
