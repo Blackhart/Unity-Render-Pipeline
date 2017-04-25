@@ -40,7 +40,7 @@
 
 			CGPROGRAM
 
-			#pragma shader_feature HORIZONTAL VERTICAL
+			#pragma shader_feature URP_2D_GAUSSIAN_HORIZONTAL URP_2D_GAUSSIAN_VERTICAL
 
 			#pragma vertex vert
 			#pragma fragment frag
@@ -49,9 +49,9 @@
 			#include "UnityUI.cginc"
 
 			sampler2D	_MainTex;
-			int			_Width;
-			int			_Height;
-			float		_Weight[4];
+			int			URP_2D_GAUSSIAN_Width;
+			int			URP_2D_GAUSSIAN_Height;
+			float		URP_2D_GAUSSIAN_Weight[4];
 
 			struct vertOutput
 			{
@@ -63,8 +63,8 @@
 			{
 				// ~~~~~ Data ~~~~~
 
-			#if defined(HORIZONTAL)
-				float x = 1.0 / (float)_Width;
+			#if defined(URP_2D_GAUSSIAN_HORIZONTAL)
+				float x = 1.0 / (float)URP_2D_GAUSSIAN_Width;
 				float xc = 2.0 * x;
 				float xcc = 3.0 * x;
 				pOUT.texcoord[0] = float2(pIN.texcoord.x - xcc, pIN.texcoord.y);
@@ -74,8 +74,8 @@
 				pOUT.texcoord[4] = float2(pIN.texcoord.x + x, pIN.texcoord.y);
 				pOUT.texcoord[5] = float2(pIN.texcoord.x + xc, pIN.texcoord.y);
 				pOUT.texcoord[6] = float2(pIN.texcoord.x + xcc, pIN.texcoord.y);
-			#elif defined(VERTICAL)
-				float y = 1.0 / (float)_Height;
+			#elif defined(URP_2D_GAUSSIAN_VERTICAL)
+				float y = 1.0 / (float)URP_2D_GAUSSIAN_Height;
 				float yc = 2.0 * y;
 				float ycc = 3.0 * y;
 				pOUT.texcoord[0] = float2(pIN.texcoord.x, pIN.texcoord.y - ycc);
@@ -100,13 +100,13 @@
 			void	frag(in vertOutput pIN, out fragOutput pOUT)
 			{
 				half4 color = half4(0.0, 0.0, 0.0, 0.0);
-				color += tex2D(_MainTex, pIN.texcoord[0]) * _Weight[3];
-				color += tex2D(_MainTex, pIN.texcoord[1]) * _Weight[2];
-				color += tex2D(_MainTex, pIN.texcoord[2]) * _Weight[1];
-				color += tex2D(_MainTex, pIN.texcoord[3]) * _Weight[0];
-				color += tex2D(_MainTex, pIN.texcoord[4]) * _Weight[1];
-				color += tex2D(_MainTex, pIN.texcoord[5]) * _Weight[2];
-				color += tex2D(_MainTex, pIN.texcoord[6]) * _Weight[3];
+				color += tex2D(_MainTex, pIN.texcoord[0]) * URP_2D_GAUSSIAN_Weight[3];
+				color += tex2D(_MainTex, pIN.texcoord[1]) * URP_2D_GAUSSIAN_Weight[2];
+				color += tex2D(_MainTex, pIN.texcoord[2]) * URP_2D_GAUSSIAN_Weight[1];
+				color += tex2D(_MainTex, pIN.texcoord[3]) * URP_2D_GAUSSIAN_Weight[0];
+				color += tex2D(_MainTex, pIN.texcoord[4]) * URP_2D_GAUSSIAN_Weight[1];
+				color += tex2D(_MainTex, pIN.texcoord[5]) * URP_2D_GAUSSIAN_Weight[2];
+				color += tex2D(_MainTex, pIN.texcoord[6]) * URP_2D_GAUSSIAN_Weight[3];
 				pOUT.color = color;
 			}
 

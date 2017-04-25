@@ -10,11 +10,20 @@ namespace Effects
 		#region Parameters
 
 		private static readonly string	SHADER_NAME = "Development/Gaussian";
+		private static readonly string	RENDER_TARGET1_NAME = "URP_2D_GAUSSIAN_RenderTarget1";
+		private static readonly string	RENDER_TARGET2_NAME = "URP_2D_GAUSSIAN_RenderTarget2";
+		private static readonly string	SHADER_WIDTH_PROPERTY_NAME = "URP_2D_GAUSSIAN_Width";
+		private static readonly string	SHADER_HEIGHT_PROPERTY_NAME = "URP_2D_GAUSSIAN_Height";
+		private static readonly string	SHADER_WEIGHT_PROPERTY_NAME = "URP_2D_GAUSSIAN_Weight";
+		private static readonly string	SHADER_HORIZONTAL_KEYWORD_NAME = "URP_2D_GAUSSIAN_HORIZONTAL";
+		private static readonly string	SHADER_VERTICAL_KEYWORD_NAME = "URP_2D_GAUSSIAN_VERTICAL";
+		private static readonly string	BLURRED_TEXTURE_NAME = "URP_2D_GAUSSIAN_BlurredTexture";
 
 		private CommandBuffer	__commandBuffer = null;
 		private Material 		__material = null;
 		private int				__blurredTextureID = -1;
 		private Texture			__blurredTexture = null;
+
 		[SerializeField]
 		private int				__downsampling = 1;
 
@@ -85,24 +94,24 @@ namespace Effects
 			int lWidth = lImage.sprite.texture.width / __downsampling;
 			int lHeight = lImage.sprite.texture.height / __downsampling;
 
-			int	lRenderTarget1ID = Shader.PropertyToID("_RenderTarget1");
-			int lRenderTarget2ID = Shader.PropertyToID("_RenderTarget2");
+			int	lRenderTarget1ID = Shader.PropertyToID(RENDER_TARGET1_NAME);
+			int lRenderTarget2ID = Shader.PropertyToID(RENDER_TARGET2_NAME);
 			__commandBuffer.GetTemporaryRT(lRenderTarget1ID, lWidth, lHeight, 0, lImage.sprite.texture.filterMode);
 			__commandBuffer.GetTemporaryRT(lRenderTarget2ID, lWidth, lHeight, 0, lImage.sprite.texture.filterMode);
 
-			__commandBuffer.SetGlobalFloat("_Width", lWidth);
-			__commandBuffer.SetGlobalFloat("_Height", lHeight);
-			__commandBuffer.SetGlobalFloatArray("_Weight", new float[4] { 0.23463f, 0.20111f, 0.12569f, 0.05586f });
+			__commandBuffer.SetGlobalFloat(SHADER_WIDTH_PROPERTY_NAME, lWidth);
+			__commandBuffer.SetGlobalFloat(SHADER_HEIGHT_PROPERTY_NAME, lHeight);
+			__commandBuffer.SetGlobalFloatArray(SHADER_WEIGHT_PROPERTY_NAME, new float[4] { 0.23463f, 0.20111f, 0.12569f, 0.05586f });
 
-			__commandBuffer.EnableShaderKeyword("HORIZONTAL");
-			__commandBuffer.DisableShaderKeyword("VERTICAL");
+			__commandBuffer.EnableShaderKeyword(SHADER_HORIZONTAL_KEYWORD_NAME);
+			__commandBuffer.DisableShaderKeyword(SHADER_VERTICAL_KEYWORD_NAME);
 			__commandBuffer.Blit(lImage.sprite.texture, lRenderTarget1ID, __material);
 
-			__commandBuffer.EnableShaderKeyword("VERTICAL");
-			__commandBuffer.DisableShaderKeyword("HORIZONTAL");
+			__commandBuffer.EnableShaderKeyword(SHADER_VERTICAL_KEYWORD_NAME);
+			__commandBuffer.DisableShaderKeyword(SHADER_HORIZONTAL_KEYWORD_NAME);
 			__commandBuffer.Blit(lRenderTarget1ID, lRenderTarget2ID, __material);
 
-			__blurredTextureID = Shader.PropertyToID("_BlurredTexture");
+			__blurredTextureID = Shader.PropertyToID(BLURRED_TEXTURE_NAME);
 			__commandBuffer.SetGlobalTexture(__blurredTextureID, lRenderTarget2ID);
 
 			__commandBuffer.ReleaseTemporaryRT(lRenderTarget1ID);
