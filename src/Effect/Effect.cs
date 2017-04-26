@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Effects
 {
-	public abstract class Effect : MonoBehaviour
+	public abstract class Effect
 	{
 		#region Parameters
 
