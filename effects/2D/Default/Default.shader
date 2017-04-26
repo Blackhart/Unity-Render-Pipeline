@@ -48,7 +48,7 @@
 			CGPROGRAM
 
 			#pragma multi_compile __ UNITY_UI_ALPHACLIP
-			#pragma shader_feature MAIN_TEX OVERRIDE_TEX
+			#pragma multi_compile MAIN_TEX OVERRIDE_TEX
 
 			#pragma vertex vert
 			#pragma fragment frag

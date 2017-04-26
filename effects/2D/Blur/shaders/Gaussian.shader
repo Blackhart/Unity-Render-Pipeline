@@ -29,8 +29,7 @@
 			ReadMask [_StencilReadMask]
 			WriteMask [_StencilWriteMask]
 		}
-		
-		LOD 100
+
 		Lighting Off // Lighting sets to off
 
 		Pass
@@ -40,7 +39,7 @@
 
 			CGPROGRAM
 
-			#pragma shader_feature URP_2D_GAUSSIAN_HORIZONTAL URP_2D_GAUSSIAN_VERTICAL
+			#pragma multi_compile URP_2D_GAUSSIAN_HORIZONTAL URP_2D_GAUSSIAN_VERTICAL
 
 			#pragma vertex vert
 			#pragma fragment frag
