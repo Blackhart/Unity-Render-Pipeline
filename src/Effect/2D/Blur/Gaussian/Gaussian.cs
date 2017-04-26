@@ -2,8 +2,9 @@
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 
-namespace Effects
+namespace URP.Effects
 {
+	[System.Serializable]
 	public class Gaussian : Effect 
 	{
 		#region Parameters
@@ -17,16 +18,24 @@ namespace Effects
 		private static readonly string	SHADER_VERTICAL_PASS_NAME = "URP_2D_GAUSSIAN_VERTICAL";
 		private static readonly string	BLURRED_TEXTURE_NAME = "URP_2D_GAUSSIAN_BlurredTexture";
 
-		private CommandBuffer	__commandBuffer = null;
-		private Material 		__blurMaterial = null;
-		private int				__blurredTextureID = -1;
-
-		[SerializeField]
-		private int				__downsampling = 1;
+		private CommandBuffer	__commandBuffer;
+		private Material 		__blurMaterial;
+		private int				__blurredTextureID;
+		private int				__downsampling;
 
 		#endregion
 
 		#region Properties
+
+		public override Texture IN
+		{
+			get { return base.IN; }
+			set 
+			{
+				base.IN = value;
+				UpdateCommandBuffer();
+			}
+		}
 
 		public int	Downsampling
 		{
@@ -34,27 +43,68 @@ namespace Effects
 			set 
 			{
 				__downsampling = value;
-				Initialize();
+				UpdateCommandBuffer();
 			}
 		}
 
 		#endregion
 
-		#region Impl
+		#region Object
+
+		public	Gaussian()
+		{
+			Initialize();
+		}
+
+		#endregion
+
+		#region Impl(PUBLIC)
 
 		public override void	Initialize()
 		{
+			__commandBuffer = new CommandBuffer();
+			__commandBuffer.name = "Effect: 2D Gaussian Blur";
+
 			__blurMaterial = new Material(Shader.Find(BLUR_SHADER_NAME));
 			__blurMaterial.hideFlags = HideFlags.HideAndDontSave;
 
 			__blurredTextureID = Shader.PropertyToID(BLURRED_TEXTURE_NAME);
 
+			__downsampling = 8;
+		}
+
+		public override void	Uninitialize()
+		{
+			__commandBuffer = null;
+			__blurMaterial = null;
+			__blurredTextureID = -1;
+			__downsampling = 1;
+		}
+
+		public override void	Execute()
+		{
+			if (_repeatMode == eRepeatMode.FOREVER || _repeatMode == eRepeatMode.ONCE)
+			{
+				Graphics.ExecuteCommandBuffer(__commandBuffer);
+				_OUT = Shader.GetGlobalTexture(__blurredTextureID);
+			}
+		}
+
+		#endregion
+
+		#region Impl(HIDDEN)
+
+		protected void	UpdateCommandBuffer()
+		{
+			__commandBuffer.Clear();
+			SetCommandBuffer();
+		}
+
+		protected void	SetCommandBuffer()
+		{
 			int lWidth = _IN.width / __downsampling;
 			int lHeight = _IN.height / __downsampling;
 			FilterMode lFilterMode = _IN.filterMode;
-
-			__commandBuffer = new CommandBuffer();
-			__commandBuffer.name = "Object: " + transform.name + " | Effect: 2D Gaussian Blur";
 
 			int	lRenderTarget_ID1 = Shader.PropertyToID(RENDER_TARGET_NAME + "_1");
 			int	lRenderTarget_ID2 = Shader.PropertyToID(RENDER_TARGET_NAME + "_2");
@@ -77,19 +127,6 @@ namespace Effects
 
 			__commandBuffer.ReleaseTemporaryRT(lRenderTarget_ID1);
 			__commandBuffer.ReleaseTemporaryRT(lRenderTarget_ID2);
-		}
-
-		public override void	Uninitialize()
-		{
-			__commandBuffer = null;
-			__blurMaterial = null;
-			__blurredTextureID = -1;
-		}
-
-		public override void	Execute()
-		{
-			Graphics.ExecuteCommandBuffer(__commandBuffer);
-			_OUT = Shader.GetGlobalTexture(__blurredTextureID);
 		}
 
 		#endregion
