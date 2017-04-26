@@ -1,4 +1,4 @@
-﻿Shader "Development/Gaussian"
+﻿Shader "URP/Gaussian"
 {
 	Properties
 	{
