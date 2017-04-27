@@ -30,7 +30,7 @@ namespace URP.Effects
 			set 
 			{
 				__downsampling = value;
-				UpdateCommandBuffer();
+				_dirty = true;
 			}
 		}
 

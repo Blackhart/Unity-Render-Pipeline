@@ -24,6 +24,7 @@ namespace URP.Effects
 		protected CommandBuffer	_commandBuffer;
 		protected Material		_material;
 		protected int			_OUT_Texture_ID;
+		protected bool			_dirty;
 
 		#endregion
 
@@ -35,7 +36,7 @@ namespace URP.Effects
 			set
 			{
 				_IN = value;
-				UpdateCommandBuffer();
+				_dirty = true;
 			}
 		}
 
@@ -74,12 +75,15 @@ namespace URP.Effects
 			_commandBuffer = null;
 			_material = null;
 			_OUT_Texture_ID = -1;
+			_dirty = false;
 		}
 
 		public virtual void	Execute()
 		{
-			if (_repeatMode == eRepeatMode.FOREVER || _repeatMode == eRepeatMode.ONCE)
+			if (_repeatMode == eRepeatMode.FOREVER || _repeatMode == eRepeatMode.ONCE || _dirty == true)
 			{
+				if (_dirty)
+					UpdateCommandBuffer();
 				Graphics.ExecuteCommandBuffer(_commandBuffer);
 				_OUT = Shader.GetGlobalTexture(_OUT_Texture_ID);
 			}
@@ -91,6 +95,7 @@ namespace URP.Effects
 
 		protected virtual void	UpdateCommandBuffer()
 		{
+			_dirty = false;
 			_commandBuffer.Clear();
 		}
 
