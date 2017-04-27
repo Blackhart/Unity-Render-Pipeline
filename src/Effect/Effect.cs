@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace URP.Effects
 {
@@ -20,18 +21,25 @@ namespace URP.Effects
 		protected Texture		_IN;
 		protected Texture		_OUT;
 		protected eRepeatMode	_repeatMode;
+		protected CommandBuffer	_commandBuffer;
+		protected Material		_material;
+		protected int			_OUT_Texture_ID;
 
 		#endregion
 
 		#region Properties
 
-		public virtual Texture	IN
+		public Texture	IN
 		{
 			get { return _IN; }
-			set { _IN = value; }
+			set
+			{
+				_IN = value;
+				UpdateCommandBuffer();
+			}
 		}
 
-		public virtual Texture	OUT
+		public Texture	OUT
 		{
 			get { return _OUT; }
 			protected set { _OUT = value; }
@@ -49,9 +57,7 @@ namespace URP.Effects
 
 		protected	Effect()
 		{
-			_IN = null;
-			_OUT = null;
-			_repeatMode = eRepeatMode.NEVER;
+			Uninitialize();
 		}
 
 		#endregion
@@ -59,8 +65,31 @@ namespace URP.Effects
 		#region Impl(PUBLIC)
 
 		public abstract void	Initialize();
-		public abstract void	Uninitialize();
-		public abstract void	Execute();
+
+		public virtual void	Uninitialize()
+		{
+			_IN = null;
+			_OUT = null;
+			_repeatMode = eRepeatMode.NEVER;
+			_commandBuffer = null;
+			_material = null;
+			_OUT_Texture_ID = -1;
+		}
+
+		public virtual void	Execute()
+		{
+			if (_repeatMode == eRepeatMode.FOREVER || _repeatMode == eRepeatMode.ONCE)
+			{
+				Graphics.ExecuteCommandBuffer(_commandBuffer);
+				_OUT = Shader.GetGlobalTexture(_OUT_Texture_ID);
+			}
+		}
+
+		#endregion
+
+		#region Impl(HIDDEN)
+
+		protected abstract void	UpdateCommandBuffer();
 
 		#endregion
 	}

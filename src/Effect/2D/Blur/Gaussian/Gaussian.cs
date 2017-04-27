@@ -16,26 +16,13 @@ namespace URP.Effects
 		private static readonly string	SHADER_WEIGHT_PROPERTY_NAME = "URP_2D_GAUSSIAN_Weight";
 		private static readonly string	SHADER_HORIZONTAL_PASS_NAME = "URP_2D_GAUSSIAN_HORIZONTAL";
 		private static readonly string	SHADER_VERTICAL_PASS_NAME = "URP_2D_GAUSSIAN_VERTICAL";
-		private static readonly string	BLURRED_TEXTURE_NAME = "URP_2D_GAUSSIAN_BlurredTexture";
+		private static readonly string	BLURRED_TEXTURE_NAME = "URP_2D_GAUSSIAN_TEXTURE";
 
-		private CommandBuffer	__commandBuffer;
-		private Material 		__blurMaterial;
-		private int				__blurredTextureID;
-		private int				__downsampling;
+		private int	__downsampling;
 
 		#endregion
 
 		#region Properties
-
-		public override Texture IN
-		{
-			get { return base.IN; }
-			set 
-			{
-				base.IN = value;
-				UpdateCommandBuffer();
-			}
-		}
 
 		public int	Downsampling
 		{
@@ -62,41 +49,30 @@ namespace URP.Effects
 
 		public override void	Initialize()
 		{
-			__commandBuffer = new CommandBuffer();
-			__commandBuffer.name = "Effect: 2D Gaussian Blur";
+			_commandBuffer = new CommandBuffer();
+			_commandBuffer.name = "Effect: 2D Gaussian Blur";
 
-			__blurMaterial = new Material(Shader.Find(BLUR_SHADER_NAME));
-			__blurMaterial.hideFlags = HideFlags.HideAndDontSave;
+			_material = new Material(Shader.Find(BLUR_SHADER_NAME));
+			_material.hideFlags = HideFlags.HideAndDontSave;
 
-			__blurredTextureID = Shader.PropertyToID(BLURRED_TEXTURE_NAME);
+			_OUT_Texture_ID = Shader.PropertyToID(BLURRED_TEXTURE_NAME);
 
 			__downsampling = 8;
 		}
 
 		public override void	Uninitialize()
 		{
-			__commandBuffer = null;
-			__blurMaterial = null;
-			__blurredTextureID = -1;
+			base.Uninitialize();
 			__downsampling = 1;
-		}
-
-		public override void	Execute()
-		{
-			if (_repeatMode == eRepeatMode.FOREVER || _repeatMode == eRepeatMode.ONCE)
-			{
-				Graphics.ExecuteCommandBuffer(__commandBuffer);
-				_OUT = Shader.GetGlobalTexture(__blurredTextureID);
-			}
 		}
 
 		#endregion
 
 		#region Impl(HIDDEN)
 
-		protected void	UpdateCommandBuffer()
+		protected override void	UpdateCommandBuffer()
 		{
-			__commandBuffer.Clear();
+			_commandBuffer.Clear();
 			SetCommandBuffer();
 		}
 
@@ -108,25 +84,25 @@ namespace URP.Effects
 
 			int	lRenderTarget_ID1 = Shader.PropertyToID(RENDER_TARGET_NAME + "_1");
 			int	lRenderTarget_ID2 = Shader.PropertyToID(RENDER_TARGET_NAME + "_2");
-			__commandBuffer.GetTemporaryRT(lRenderTarget_ID1, lWidth, lHeight, 0, lFilterMode);
-			__commandBuffer.GetTemporaryRT(lRenderTarget_ID2, lWidth, lHeight, 0, lFilterMode);
+			_commandBuffer.GetTemporaryRT(lRenderTarget_ID1, lWidth, lHeight, 0, lFilterMode);
+			_commandBuffer.GetTemporaryRT(lRenderTarget_ID2, lWidth, lHeight, 0, lFilterMode);
 
-			__commandBuffer.SetGlobalFloat(SHADER_WIDTH_PROPERTY_NAME, lWidth);
-			__commandBuffer.SetGlobalFloat(SHADER_HEIGHT_PROPERTY_NAME, lHeight);
-			__commandBuffer.SetGlobalFloatArray(SHADER_WEIGHT_PROPERTY_NAME, new float[4] { 0.23463f, 0.20111f, 0.12569f, 0.05586f });
+			_commandBuffer.SetGlobalFloat(SHADER_WIDTH_PROPERTY_NAME, lWidth);
+			_commandBuffer.SetGlobalFloat(SHADER_HEIGHT_PROPERTY_NAME, lHeight);
+			_commandBuffer.SetGlobalFloatArray(SHADER_WEIGHT_PROPERTY_NAME, new float[4] { 0.23463f, 0.20111f, 0.12569f, 0.05586f });
 
-			__commandBuffer.EnableShaderKeyword(SHADER_HORIZONTAL_PASS_NAME);
-			__commandBuffer.DisableShaderKeyword(SHADER_VERTICAL_PASS_NAME);
-			__commandBuffer.Blit(_IN, lRenderTarget_ID1, __blurMaterial);
+			_commandBuffer.EnableShaderKeyword(SHADER_HORIZONTAL_PASS_NAME);
+			_commandBuffer.DisableShaderKeyword(SHADER_VERTICAL_PASS_NAME);
+			_commandBuffer.Blit(_IN, lRenderTarget_ID1, _material);
 
-			__commandBuffer.EnableShaderKeyword(SHADER_VERTICAL_PASS_NAME);
-			__commandBuffer.DisableShaderKeyword(SHADER_HORIZONTAL_PASS_NAME);
-			__commandBuffer.Blit(lRenderTarget_ID1, lRenderTarget_ID2, __blurMaterial);
+			_commandBuffer.EnableShaderKeyword(SHADER_VERTICAL_PASS_NAME);
+			_commandBuffer.DisableShaderKeyword(SHADER_HORIZONTAL_PASS_NAME);
+			_commandBuffer.Blit(lRenderTarget_ID1, lRenderTarget_ID2, _material);
 
-			__commandBuffer.SetGlobalTexture(__blurredTextureID, lRenderTarget_ID2);
+			_commandBuffer.SetGlobalTexture(_OUT_Texture_ID, lRenderTarget_ID2);
 
-			__commandBuffer.ReleaseTemporaryRT(lRenderTarget_ID1);
-			__commandBuffer.ReleaseTemporaryRT(lRenderTarget_ID2);
+			_commandBuffer.ReleaseTemporaryRT(lRenderTarget_ID1);
+			_commandBuffer.ReleaseTemporaryRT(lRenderTarget_ID2);
 		}
 
 		#endregion
