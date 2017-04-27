@@ -89,7 +89,10 @@ namespace URP.Effects
 
 		#region Impl(HIDDEN)
 
-		protected abstract void	UpdateCommandBuffer();
+		protected virtual void	UpdateCommandBuffer()
+		{
+			_commandBuffer.Clear();
+		}
 
 		#endregion
 	}

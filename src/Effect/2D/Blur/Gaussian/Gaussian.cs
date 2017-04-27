@@ -10,7 +10,7 @@ namespace URP.Effects
 		#region Parameters
 
 		private static readonly string	BLUR_SHADER_NAME = "URP/Gaussian";
-		private static readonly string	RENDER_TARGET_NAME = "URP_2D_GAUSSIAN_RenderTarget";
+		private static readonly string	RENDER_TARGET_NAME = "URP_2D_GAUSSIAN_RENDER_TARGET";
 		private static readonly string	SHADER_WIDTH_PROPERTY_NAME = "URP_2D_GAUSSIAN_Width";
 		private static readonly string	SHADER_HEIGHT_PROPERTY_NAME = "URP_2D_GAUSSIAN_Height";
 		private static readonly string	SHADER_WEIGHT_PROPERTY_NAME = "URP_2D_GAUSSIAN_Weight";
@@ -72,7 +72,7 @@ namespace URP.Effects
 
 		protected override void	UpdateCommandBuffer()
 		{
-			_commandBuffer.Clear();
+			base.UpdateCommandBuffer();
 			SetCommandBuffer();
 		}
 

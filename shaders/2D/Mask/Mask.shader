@@ -2,6 +2,8 @@
 {
 	Properties
 	{
+		_MainTex ("Sprite Texture", 2D) = "white" {}
+
 		_StencilComp ("Stencil Comparison", Float) = 8
 		_Stencil ("Stencil ID", Float) = 0
 		_StencilOp ("Stencil Operation", Float) = 0
@@ -42,13 +44,20 @@
 			#include "UnityCG.cginc"
 			#include "UnityUI.cginc"
 
+			sampler2D	_MainTex;
+
 			struct vertOutput
 			{
 				float4 clipPos : SV_POSITION;
+				float2 texcoord : TEXCOORD0;
 			};
 
 			void	vert(in appdata_base pIN, out vertOutput pOUT)
 			{
+				// ~~~~~ Data ~~~~~
+
+				pOUT.texcoord = pIN.texcoord;
+
 				// ~~~~~ Output ~~~~~
 
 				pOUT.clipPos = UnityObjectToClipPos(pIN.vertex);
@@ -63,7 +72,7 @@
 			{
 				// ~~~~~ Output ~~~~~
 
-				pOUT.color = half4(1.0, 0.0, 0.0, 1.0);
+				pOUT.color = tex2D(_MainTex, pIN.texcoord);
 			}
 
 			ENDCG
