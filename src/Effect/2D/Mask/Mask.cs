@@ -7,7 +7,7 @@ namespace URP.Effects
 	{
 		#region Structs
 
-		struct sMaskTransform
+		public struct sMaskTransform
 		{
 			public int x;
 			public int y;
@@ -61,8 +61,6 @@ namespace URP.Effects
 			_material.hideFlags = HideFlags.HideAndDontSave;
 
 			_OUT_Texture_ID = Shader.PropertyToID(MASK_TEXTURE_NAME);
-
-			__maskTransform = null;
 		}
 
 		public override void Uninitialize ()
