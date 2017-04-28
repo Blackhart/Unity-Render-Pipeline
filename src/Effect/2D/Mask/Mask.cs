@@ -5,31 +5,19 @@ namespace URP.Effects
 {
 	public class Mask : Effect
 	{
-		#region Structs
-
-		public struct sMaskTransform
-		{
-			public int x;
-			public int y;
-			public int width;
-			public int height;
-		};
-
-		#endregion
-
 		#region Parameters
 
 		private static readonly string	MASK_SHADER_NAME = "Development/Mask";
 		private static readonly string	MASK_TEXTURE_NAME = "URP_2D_MASK_TEXTURE";
 		private static readonly string	MASK_RENDER_TARGET_NAME = "URP_2D_MASK_RENDER_TARGET";
 
-		private sMaskTransform	__maskTransform;
+		private Utility.Transform.sTransform	__maskTransform;
 
 		#endregion
 
 		#region Properties
 
-		public sMaskTransform	MaskTransform
+		public Utility.Transform.sTransform	MaskTransform
 		{
 			get { return __maskTransform; }
 			set
