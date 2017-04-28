@@ -4,7 +4,6 @@ using UnityEngine.UI;
 
 namespace URP.Effects
 {
-	[System.Serializable]
 	public class Gaussian : Effect 
 	{
 		#region Parameters

@@ -2,7 +2,7 @@
 
 namespace URP.Utility
 {
-	public static class Transform
+	public static class Transformation
 	{
 		#region Struct
 

@@ -11,13 +11,13 @@ namespace URP.Effects
 		private static readonly string	MASK_TEXTURE_NAME = "URP_2D_MASK_TEXTURE";
 		private static readonly string	MASK_RENDER_TARGET_NAME = "URP_2D_MASK_RENDER_TARGET";
 
-		private Utility.Transform.sTransform	__maskTransform;
+		private Utility.Transformation.sTransform	__maskTransform;
 
 		#endregion
 
 		#region Properties
 
-		public Utility.Transform.sTransform	MaskTransform
+		public Utility.Transformation.sTransform	MaskTransform
 		{
 			get { return __maskTransform; }
 			set
@@ -69,7 +69,7 @@ namespace URP.Effects
 		private void	SetCommandBuffer()
 		{
 			int lRenderTarget_ID = Shader.PropertyToID(MASK_RENDER_TARGET_NAME);
-			_commandBuffer.GetTemporaryRT(lRenderTarget_ID, __maskTransform.width, __maskTransform.height, 0, _IN.filterMode);
+			_commandBuffer.GetTemporaryRT(lRenderTarget_ID, __maskTransform.size.x, __maskTransform.size.y, 0, _IN.filterMode);
 
 			_commandBuffer.Blit(_IN, lRenderTarget_ID, _material);
 
